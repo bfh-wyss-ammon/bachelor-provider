@@ -37,16 +37,13 @@ public class ProviderRoutes {
 
 	public static void main(String[] args) {
 		
-		
-		//Need to place this code somewhere else. --> Downloading the public group data from authority
-		
-		
-
 		port(10001);
 
 		options("/*", (request, response) -> Route.ConfigureOptions(request, response));
 		before((request, response) -> Route.ConfigureBefore(request, response));
 
+		
+		
 		post("/tuple", (request, response) -> {
 				response.status(Route.StatuscodeOk);
 			return "";

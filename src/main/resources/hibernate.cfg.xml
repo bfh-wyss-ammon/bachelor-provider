@@ -9,6 +9,7 @@
         <property name="hibernate.show_sql">true</property>
         <mapping resource="group.hbm.xml" />
         <mapping resource="publicKey.hbm.xml" />
+        <mapping resource="tuple.hbm.xml" />
         <mapping class="data.DbUser" />  
     </session-factory>
 </hibernate-configuration>
