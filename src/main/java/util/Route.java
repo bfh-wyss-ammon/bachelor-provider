@@ -13,11 +13,11 @@ public class Route {
 	public static final int NotImplemented = 501;
 	public static final int BadRequest = 400;
 	
-	//public static final String TokenHeader = "x-custom-token";
+	public static final String SignatureHeader = "x-custom-signature";
 	
 	private static final String Origin = "http://*.*";
 	private static final String Methods = "POST";
-	private static final String Headers = "Content-Type";
+	private static final String Headers = "Content-Type, x-custom-signature";
 	
 	public static String ConfigureOptions(Request request, Response response) {
 		String accessControlRequestHeaders = request.headers("Access-Control-Request-Headers");
