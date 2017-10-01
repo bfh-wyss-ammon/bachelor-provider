@@ -22,6 +22,7 @@ import util.BigIntegerGsonTypeAdapter;
 import util.Credential;
 import util.Database;
 import util.GroupHelper;
+import util.HashHelper;
 import util.JoinHelper;
 import util.MembershipHelper;
 import util.Route;
@@ -49,7 +50,6 @@ public class ProviderRoutes {
 			try {
 
 				// parse
-				String strTuple = request.body();
 				DbTuple tuple = (DbTuple) gson.fromJson(request.body(), DbTuple.class);
 				String strSignature = request.headers(Route.SignatureHeader);
 				Signature signature = (Signature) gson.fromJson(strSignature, Signature.class);
@@ -65,7 +65,8 @@ public class ProviderRoutes {
 				}
 
 				// verify tuple signature
-				boolean signatureValid = VerifyHelper.verify(publicKey, signature, strTuple.getBytes());
+				String hash = HashHelper.getHash(tuple);
+				boolean signatureValid = VerifyHelper.verify(publicKey, signature, hash.getBytes());
 
 				if (!signatureValid) {
 					response.status(Route.BadRequest);
