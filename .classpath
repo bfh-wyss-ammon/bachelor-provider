@@ -27,7 +27,7 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/bachelor-authority"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/bachelor-cryptography-library"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/CommonLibrary"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/CryptographyLibrary"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

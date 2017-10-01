@@ -13,7 +13,7 @@ import com.google.gson.reflect.TypeToken;
 
 import data.DbGroup;
 
-public class GroupFetcher {
+public class GroupHelper {
 
 	public static boolean getGroupsFromAuthority(String authorityUrl) {
 
@@ -57,7 +57,7 @@ public class GroupFetcher {
 			return false;
 
 		for (DbGroup grp : groupList) {
-			Database.SaveOrUpdate(grp);
+			DatabaseHelper.SaveOrUpdate(grp);
 		}
 
 		return true;
