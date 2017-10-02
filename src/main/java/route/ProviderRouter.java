@@ -7,8 +7,9 @@ import data.DbTuple;
 import rest.BaseRouter;
 import rest.Router;
 import signatures.Signature;
+import util.Consts;
 import util.DatabaseHelper;
-import util.Route;
+import util.HashHelper;
 import util.VerifyHelper;
 
 public class ProviderRouter extends BaseRouter implements Router {
@@ -26,7 +27,7 @@ public class ProviderRouter extends BaseRouter implements Router {
 				// parse
 				String strTuple = request.body();
 				DbTuple tuple = (DbTuple) gson.fromJson(request.body(), DbTuple.class);
-				String strSignature = request.headers(Route.SignatureHeader);
+				String strSignature = request.headers(Consts.SignatureHeader);
 				Signature signature = (Signature) gson.fromJson(strSignature, Signature.class);
 
 				// get public key from db
@@ -35,16 +36,16 @@ public class ProviderRouter extends BaseRouter implements Router {
 
 				// check public key
 				if (publicKey == null) {
-					response.status(Route.BadRequest);
+					response.status(Consts.HttpBadRequest);
 					return "";
 				}
 
 				// verify tuple signature
-				
-				boolean signatureValid = VerifyHelper.verify(publicKey, signature, strTuple.getBytes());
+
+				boolean signatureValid = VerifyHelper.verify(publicKey, signature, HashHelper.getHash(strTuple));
 
 				if (!signatureValid) {
-					response.status(Route.BadRequest);
+					response.status(Consts.HttpBadRequest);
 					return "";
 				}
 
@@ -52,10 +53,10 @@ public class ProviderRouter extends BaseRouter implements Router {
 				tuple.setReceived(new Date());
 				DatabaseHelper.Save(DbTuple.class, tuple);
 
-				response.status(Route.StatuscodeOk);
+				response.status(Consts.HttpStatuscodeOk);
 			} catch (Exception ex) {
 
-				response.status(Route.BadRequest);
+				response.status(Consts.HttpBadRequest);
 			}
 			return "";
 		});
