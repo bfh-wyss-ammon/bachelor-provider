@@ -10,7 +10,7 @@ public class FetchGroupTest {
 	public void test() {
 		
 		//NOTE: This test only works when the authority is running
-		boolean success = GroupHelper.getGroupsFromAuthority("http://localhost:10000/group");
+		boolean success = GroupHelper.getGroupsFromAuthority("http://localhost:4567/group");
 		
 		assertEquals(success,true);
 		}
