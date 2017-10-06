@@ -4,19 +4,32 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import interfaces.HashValue;
-
 public class DbTuple {
 
 	private int tupleId;
-	private int groupId;
+
+	private DbGroup group;
+	private DbSignature signature;
+
 	@HashValue
 	private BigDecimal longitude;
 	@HashValue
 	private BigDecimal latitude;
+	@HashValue
 	private Date created;
 	private Date received;
-	@HashValue
-	private String signature;
+
+	public DbTuple() {
+
+	}
+
+	public DbTuple(Tuple tuple, DbGroup group) {
+		this.longitude = tuple.getLongitude();
+		this.latitude = tuple.getLatitude();
+		this.created = tuple.getCreated();
+		this.group = group;
+		this.signature = new DbSignature(tuple.getSignature());
+	}
 
 	public int getTupleId() {
 		return tupleId;
@@ -26,12 +39,12 @@ public class DbTuple {
 		this.tupleId = tupleId;
 	}
 
-	public int getGroupId() {
-		return groupId;
+	public DbGroup getGroup() {
+		return group;
 	}
 
-	public void setGroupId(int groupId) {
-		this.groupId = groupId;
+	public void setGroup(DbGroup group) {
+		this.group = group;
 	}
 
 	public BigDecimal getLongitude() {
@@ -66,11 +79,11 @@ public class DbTuple {
 		this.received = received;
 	}
 
-	public String getSignature() {
+	public DbSignature getSignature() {
 		return signature;
 	}
 
-	public void setSignature(String signature) {
+	public void setSignature(DbSignature signature) {
 		this.signature = signature;
 	}
 

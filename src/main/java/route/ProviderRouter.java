@@ -2,11 +2,11 @@ package route;
 
 import static spark.Spark.*;
 import java.util.Date;
-import data.DbPublicKey;
+import data.DbGroup;
 import data.DbTuple;
+import data.Tuple;
 import rest.BaseRouter;
 import rest.Router;
-import signatures.Signature;
 import util.Consts;
 import util.DatabaseHelper;
 import util.HashHelper;
@@ -23,37 +23,32 @@ public class ProviderRouter extends BaseRouter implements Router {
 	public void start() {
 		post("/tuple", (request, response) -> {
 			try {
+			
+				Tuple tuple = (Tuple) gson.fromJson(request.body(), Tuple.class);
+				
+				if(tuple == null || !DatabaseHelper.Exists(DbGroup.class, "groupId='" + tuple.getGroupId() + "'"))
+				{
+					response.status(Consts.HttpBadRequest);
+					return "";
+				}
+								
+				DbGroup group = DatabaseHelper.Get(DbGroup.class, tuple.getGroupId());
+				
+				DbTuple dpTuple = new DbTuple(tuple, group);			
+				
 
-				// parse
-				String strTuple = request.body();
-				DbTuple tuple = (DbTuple) gson.fromJson(request.body(), DbTuple.class);
-				String strSignature = request.headers(Consts.SignatureHeader);
-				Signature signature = (Signature) gson.fromJson(strSignature, Signature.class);
-
-				// get public key from db
-				int groupId = tuple.getGroupId();
-				DbPublicKey publicKey = DatabaseHelper.Get(DbPublicKey.class, "groupId = '" + groupId + "'");
-
-				// check public key
-				if (publicKey == null) {
+				if (!VerifyHelper.verify(group.getPublicKey(), tuple.getSignature(), HashHelper.getHash(tuple)))
+				{
 					response.status(Consts.HttpBadRequest);
 					return "";
 				}
 
-				// verify tuple signature
-
-				boolean signatureValid = VerifyHelper.verify(publicKey, signature, HashHelper.getHash(strTuple));
-
-				if (!signatureValid) {
-					response.status(Consts.HttpBadRequest);
-					return "";
-				}
-
-				// save tuple to db
-				tuple.setReceived(new Date());
-				DatabaseHelper.Save(DbTuple.class, tuple);
-
+				dpTuple.setReceived(new Date());
+				
+				
+				DatabaseHelper.Save(DbTuple.class, dpTuple);
 				response.status(Consts.HttpStatuscodeOk);
+				
 			} catch (Exception ex) {
 
 				response.status(Consts.HttpBadRequest);

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping>
+	<class name="data.DbSignature" table="signature">
+		<id name="signatureId" type="int" column="signatureId">
+			<generator class="identity" />
+		</id>
+		<property name="u" type="hibernate.BigIntegerType">
+			<column name="u" />
+		</property>
+		<property name="bigU1" type="hibernate.BigIntegerType">
+			<column name="bigU1" />
+		</property>
+		<property name="bigU2" type="hibernate.BigIntegerType">
+			<column name="bigU2" />
+		</property>
+		<property name="bigU3" type="hibernate.BigIntegerType">
+			<column name="bigU3" />
+		</property>
+		<property name="zx" type="hibernate.BigIntegerType">
+			<column name="zx" />
+		</property>
+		<property name="zr" type="hibernate.BigIntegerType">
+			<column name="zr" />
+		</property>
+		<property name="ze" type="hibernate.BigIntegerType">
+			<column name="ze" />
+		</property>
+		<property name="zbigR" type="hibernate.BigIntegerType">
+			<column name="zbigR" />
+		</property>
+		<property name="c" type="hibernate.BigIntegerType">
+			<column name="c" />
+		</property>
+	</class>
+</hibernate-mapping>

@@ -4,23 +4,23 @@
 		<id name="tupleId" type="int" column="tupleId">
 			<generator class="identity" />
 		</id>
-		<property name="groupId" type="int">
-			<column name="groupId" />
-		</property>
+		<many-to-one name="group" class="data.DbGroup" lazy="false"
+			fetch="select" column="groupId" unique="true" not-null="true"
+			cascade="all" />
+		<many-to-one name="signature" class="data.DbSignature" lazy="false"
+			fetch="select" column="signatureId" unique="true" not-null="true"
+			cascade="all" />
 		<property name="longitude" type="big_decimal">
 			<column name="longitude" />
 		</property>
 		<property name="latitude" type="big_decimal">
 			<column name="latitude" />
-		</property>	
+		</property>
 		<property name="created">
 			<column name="created" />
 		</property>
 		<property name="received">
 			<column name="received" />
-		</property>	
-		<property name="signature" type="string">
-			<column name="signature" />
-		</property>			
+		</property>
 	</class>
 </hibernate-mapping>
