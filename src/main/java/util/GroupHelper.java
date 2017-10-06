@@ -29,9 +29,11 @@ public class GroupHelper {
 			// drop the req
 			int status = con.getResponseCode();
 
-			if (status != 200)
+			if (status != Consts.HttpStatuscodeOk)
+			{
 				return false;
-
+			}
+			
 			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 			String inputLine;
 
@@ -49,8 +51,7 @@ public class GroupHelper {
 		String result = content.toString();
 
 		// save to db
-		Type listType = new TypeToken<ArrayList<DbGroup>>() {
-		}.getType();
+		Type listType = new TypeToken<ArrayList<DbGroup>>() {}.getType();
 		List<DbGroup> groupList = new Gson().fromJson(result, listType);
 
 		if (groupList.size() < 2)
