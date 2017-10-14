@@ -1,6 +1,7 @@
 package data;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 
 import interfaces.HashValue;
@@ -24,8 +25,8 @@ public class DbTuple {
 	}
 
 	public DbTuple(Tuple tuple, DbGroup group) {
-		this.longitude = tuple.getLongitude();
-		this.latitude = tuple.getLatitude();
+		this.longitude = tuple.getLongitude().setScale(10, RoundingMode.HALF_UP);
+		this.latitude = tuple.getLatitude().setScale(10, RoundingMode.HALF_UP);
 		this.created = tuple.getCreated();
 		this.group = group;
 		this.signature = new DbSignature(tuple.getSignature());
