@@ -4,19 +4,23 @@ import static spark.Spark.*;
 import java.util.Date;
 import data.DbGroup;
 import data.DbTuple;
+import data.ProviderSettings;
 import data.Tuple;
 import rest.BaseRouter;
 import rest.Router;
 import util.Consts;
 import util.DatabaseHelper;
+import util.GroupHelper;
 import util.HashHelper;
+import util.SettingsHelper;
 import util.VerifyHelper;
 
 public class ProviderRouter extends BaseRouter implements Router {
+	
 
 	public ProviderRouter() {
 		// load from setting
-		super(10001);
+		super(SettingsHelper.getSettings(ProviderSettings.class).getPort());
 	}
 
 	@Override
@@ -27,12 +31,19 @@ public class ProviderRouter extends BaseRouter implements Router {
 			
 				Tuple tuple = gson.fromJson(request.body(), Tuple.class);
 				
-				if(tuple == null || !DatabaseHelper.Exists(DbGroup.class, "groupId='" + tuple.getGroupId() + "'"))
+				if(tuple == null)
 				{
 					response.status(Consts.HttpBadRequest);
 					return "";
 				}
-								
+				String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL();
+				if(!DatabaseHelper.Exists(DbGroup.class, " groupId= ' " + tuple.getGroupId() + "'")) {
+					if(!GroupHelper.getGroupsFromAuthority(authorityURL, tuple.getGroupId())){
+						response.status(Consts.HttpBadRequest);
+						return "";
+					}
+				}
+				
 				DbGroup group = DatabaseHelper.Get(DbGroup.class, "groupId='" + tuple.getGroupId() + "'");
 						
 				if (!VerifyHelper.verify(group.getPublicKey(), tuple.getSignature(), HashHelper.getHash(tuple)))

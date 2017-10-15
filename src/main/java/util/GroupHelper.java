@@ -15,12 +15,12 @@ import data.DbGroup;
 
 public class GroupHelper {
 
-	public static boolean getGroupsFromAuthority(String authorityUrl) {
+	public static boolean getGroupsFromAuthority(String authorityUrl, int groupId) {
 
 		StringBuffer content = new StringBuffer();
 		try {
 			// TODO Error handling
-			URL url = new URL(authorityUrl);
+			URL url = new URL(authorityUrl +"groups/" + groupId);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
 			con.setRequestMethod("GET");
 			con.setConnectTimeout(5000);
@@ -51,15 +51,11 @@ public class GroupHelper {
 		String result = content.toString();
 
 		// save to db
-		Type listType = new TypeToken<ArrayList<DbGroup>>() {}.getType();
-		List<DbGroup> groupList = new Gson().fromJson(result, listType);
+		DbGroup group = new Gson().fromJson(result, DbGroup.class);
+		
+		if(group == null) return false;
 
-		if (groupList.size() < 2)
-			return false;
-
-		for (DbGroup grp : groupList) {
-			DatabaseHelper.SaveOrUpdate(grp);
-		}
+			DatabaseHelper.SaveOrUpdate(group);
 
 		return true;
 	}
