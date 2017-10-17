@@ -22,7 +22,7 @@ public class DbSignature implements Signature {
 		
 	}
 
-	public DbSignature(BaseSignature signature) {
+	public DbSignature(Signature signature) {
 		this.u = signature.getU();
 		this.bigU1 = signature.getBigU1();
 		this.bigU2 = signature.getBigU2();

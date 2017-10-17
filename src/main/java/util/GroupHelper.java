@@ -19,8 +19,7 @@ public class GroupHelper {
 
 		StringBuffer content = new StringBuffer();
 		try {
-			// TODO Error handling
-			URL url = new URL(authorityUrl + groupId);
+			URL url = new URL(authorityUrl +"groups/" + groupId);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
 			con.setRequestMethod("GET");
 			con.setConnectTimeout(5000);
