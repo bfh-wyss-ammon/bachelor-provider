@@ -2,6 +2,7 @@ package route;
 
 import static spark.Spark.*;
 import java.util.Date;
+
 import data.DbGroup;
 import data.DbTuple;
 import data.ProviderSettings;
@@ -27,8 +28,7 @@ public class ProviderRouter extends BaseRouter implements Router {
 	public void start() {
 		
 		post("/tuple", (request, response) -> {
-			try {
-			
+			try {			
 				Tuple tuple = gson.fromJson(request.body(), Tuple.class);
 				
 				if(tuple == null)
@@ -55,12 +55,9 @@ public class ProviderRouter extends BaseRouter implements Router {
 
 				DbTuple dpTuple = new DbTuple(tuple, group);
 				dpTuple.setReceived(new Date());
-				
-				
+
 				DatabaseHelper.Save(DbTuple.class, dpTuple);
 				response.status(Consts.HttpStatuscodeOk);
-				System.out.println("[post] /tuple new tuple saved");
-				
 			} catch (Exception ex) {
 				System.out.println("[post] /tuple error:" + ex.getMessage());
 				response.status(Consts.HttpBadRequest);
