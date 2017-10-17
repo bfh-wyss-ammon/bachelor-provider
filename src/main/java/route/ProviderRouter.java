@@ -17,6 +17,7 @@ import util.SettingsHelper;
 import util.VerifyHelper;
 
 public class ProviderRouter extends BaseRouter implements Router {
+	
 
 	public ProviderRouter() {
 		// load from setting
@@ -25,40 +26,40 @@ public class ProviderRouter extends BaseRouter implements Router {
 
 	@Override
 	public void start() {
+		
 		post("/tuple", (request, response) -> {
-			try {
-
-				Tuple tuple = (Tuple) gson.fromJson(request.body(), Tuple.class);
-				if (tuple == null) {
+			try {			
+				Tuple tuple = gson.fromJson(request.body(), Tuple.class);
+				
+				if(tuple == null)
+				{
 					response.status(Consts.HttpBadRequest);
 					return "";
 				}
-
-				int groupId = tuple.getGroupId();
-				boolean groupExistsLocally = DatabaseHelper.Exists(DbGroup.class,
-						"groupId='" + tuple.getGroupId() + "'");
-
-				if (!groupExistsLocally
-						&& !GroupHelper.getGroupsFromAuthority(SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL()+"groups/", groupId)) {
+				String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL();
+				if(!DatabaseHelper.Exists(DbGroup.class, " groupId= ' " + tuple.getGroupId() + "'")) {
+					if(!GroupHelper.getGroupsFromAuthority(authorityURL, tuple.getGroupId())){
+						response.status(Consts.HttpBadRequest);
+						return "";
+					}
+				}
+				
+				DbGroup group = DatabaseHelper.Get(DbGroup.class, "groupId='" + tuple.getGroupId() + "'");
+						
+				if (!VerifyHelper.verify(group.getPublicKey(), tuple.getSignature(), HashHelper.getHash(tuple)))
+				{
+					System.out.println("[post] /tuple bad signature");
 					response.status(Consts.HttpBadRequest);
 					return "";
 				}
-				DbGroup group = DatabaseHelper.Get(DbGroup.class, tuple.getGroupId());
 
 				DbTuple dpTuple = new DbTuple(tuple, group);
-
-				if (!VerifyHelper.verify(group.getPublicKey(), tuple.getSignature(), HashHelper.getHash(tuple))) {
-					response.status(Consts.HttpBadRequest);
-					return "";
-				}
-
 				dpTuple.setReceived(new Date());
 
 				DatabaseHelper.Save(DbTuple.class, dpTuple);
 				response.status(Consts.HttpStatuscodeOk);
-
 			} catch (Exception ex) {
-
+				System.out.println("[post] /tuple error:" + ex.getMessage());
 				response.status(Consts.HttpBadRequest);
 			}
 			return "";

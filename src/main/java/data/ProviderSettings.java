@@ -29,7 +29,4 @@ public class ProviderSettings {
 	public void setAuthorityURL(String authorityURL) {
 		this.authorityURL = authorityURL;
 	}
-
-
-
 }

@@ -8,10 +8,7 @@ public class FetchGroupTest {
 
 	@Test
 	public void test() {
-		
-		//NOTE: This test only works when the authority is running
 		boolean success = GroupHelper.getGroupsFromAuthority("http://localhost:10000/groups/" , 2);
-		
 		assertEquals(success,true);
 		}
 
