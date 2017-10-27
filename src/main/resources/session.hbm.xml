@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping>
+	<class name="data.DbSession" table="session">
+		<id name="sessionId" type="int" column="sessionId">
+			<generator class="identity" />
+		</id>
+		<many-to-one name="group" class="data.DbGroup" column="groupId" unique="true" not-null="true" lazy="false" />
+		<property name="state">
+			<column name="state" />
+		</property>
+		<property name="token">
+			<column name="token" />
+		</property>
+		<property name="created">
+			<column name="created" />
+		</property>
+	</class>
+</hibernate-mapping>

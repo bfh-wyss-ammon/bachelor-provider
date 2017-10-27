@@ -1,3 +1,4 @@
+
 package util;
 
 import static org.junit.Assert.*;
@@ -116,10 +117,10 @@ public class Tests {
 			tuple.setLongitude(new BigDecimal("8").setScale(10, RoundingMode.HALF_UP));
 			tuple.setCreated(new Date());
 
-			DemoSignature signature = new DemoSignature();
+			BaseSignature signature = new BaseSignature();
 			SignHelper.sign(memberKey, publicKey, HashHelper.getHash(tuple), signature);
 
-			tuple.setSignature(signature);
+			//tuple.setSignature(signature);
 
 			String url = "http://laptop:10001/tuple";
 			HttpPost post = new HttpPost(url);
