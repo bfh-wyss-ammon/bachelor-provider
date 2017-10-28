@@ -4,7 +4,19 @@
 		<id name="sessionId" type="int" column="sessionId">
 			<generator class="identity" />
 		</id>
-		<many-to-one name="group" class="data.DbGroup" column="groupId" unique="true" not-null="true" lazy="false" />
+		<many-to-one name="group" class="data.DbGroup" column="groupId"
+			unique="true" not-null="true" lazy="false" />
+		<many-to-one name="paymentSignature" class="data.DbSignature" column="signatureId"
+			unique="true" not-null="false" lazy="true" />
+		<property name="period">
+			<column name="period" />
+		</property>
+		<property name="SignatureOnTuples">
+			<column name="SignatureOnTuples" />
+		</property>
+		<property name="paidAmount">
+			<column name="paidAmount" />
+		</property>
 		<property name="state">
 			<column name="state" />
 		</property>
@@ -13,6 +25,9 @@
 		</property>
 		<property name="created">
 			<column name="created" />
+		</property>
+		<property name="invoiceItemsCreated">
+			<column name="invoiceItemsCreated" />
 		</property>
 	</class>
 </hibernate-mapping>
