@@ -11,7 +11,19 @@ public class DbVTuple {
 	@HashValue
 	private int price;
 	
+	private int tupleId;
 	
+
+	public int getTupleId() {
+		return tupleId;
+	}
+
+
+	public void setTupleId(int tupleId) {
+		this.tupleId = tupleId;
+	}
+
+
 	public DbVTuple() {
 		
 	}

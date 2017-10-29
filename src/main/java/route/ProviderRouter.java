@@ -18,6 +18,7 @@ import data.DbVTuple;
 import data.InvoiceItems;
 import data.ProviderSettings;
 import data.Receipt;
+import data.State;
 import data.Tuple;
 import data.Payment;
 import rest.BaseRouter;
@@ -131,26 +132,29 @@ public class ProviderRouter extends BaseRouter implements Router {
 
 			// get the tuples and save the creation time in session so we can create the
 			// same list again
-			List<DbVTuple> tuples = DatabaseHelper.Get(DbVTuple.class, "groupId='" + groupId + "'", "created", after,
+			List<DbVTuple> tuples = DatabaseHelper.Get(DbVTuple.class, "groupId= '" + groupId + "'", "created", after,
 					before);
+
 			session.setInvoiceItemsCreated(new Date());
 
 			// convert to list of tuples
 			InvoiceItems items = new InvoiceItems();
 			tuples.forEach(tuple -> items.getItems().put(tuple.getHash(), tuple.getPrice()));
 			items.setSessionId(session.getToken());
-
 			byte[] hash = HashHelper.getHash(items);
-			String signature = Base64.getEncoder().encodeToString(ProviderSignatureHelper.sign(hash));
+			byte[] sig = ProviderSignatureHelper.sign(hash);
+			String signature = Base64.getEncoder().encodeToString(sig);
 			items.setSignature(signature);
 
 			session.setSignatureOnTuples(signature);
 			session.setPeriod(period);
-			session.setState(DbSession.State.TUPLESENT);
-			DatabaseHelper.SaveOrUpdate(session);
+			session.setState(State.TUPLESENT);
+			DatabaseHelper.Save(DbSession.class, session);
 			response.header(Consts.ProviderTokenHeader, session.getToken());
 			response.status(Consts.HttpStatuscodeOk);
-			return gson.toJson(items);
+
+			String result = gson.toJson(items);
+			return gson.toJson(result);
 		});
 
 		post("/pay/:sessionId", (request, response) -> {
@@ -170,7 +174,7 @@ public class ProviderRouter extends BaseRouter implements Router {
 			}
 
 			// check session, state and payment
-			if (session == null || session.getState() != DbSession.State.TUPLESENT || payment == null) {
+			if (session == null || session.getState() != State.TUPLESENT || payment == null) {
 				response.status(Consts.HttpBadRequest);
 				return "";
 			}
@@ -179,26 +183,26 @@ public class ProviderRouter extends BaseRouter implements Router {
 			DbGroup group = session.getGroup();
 			DbSignature paymentSignature = payment.getSignature();
 			payment.setSignatureOnTuples(session.getSignatureOnTuples());
-			
+
 			byte[] messageHash = HashHelper.getHash(payment);
-			
+
 			if (!VerifyHelper.verify(group.getPublicKey(), paymentSignature, messageHash)) {
 				System.out.println("[post] /tuple bad signature");
 				response.status(Consts.HttpBadRequest);
 				return "";
 			}
-			
-			//prepare return value (signed receipt)
+
+			// prepare return value (signed receipt)
 			Receipt receipt = new Receipt();
 			receipt.setSessionId(session.getToken());
 			receipt.setSumme(payment.getSumme());
 			byte[] hash = HashHelper.getHash(receipt);
 			String signedReceipt = Base64.getEncoder().encodeToString(ProviderSignatureHelper.sign(hash));
-			
-			//save new session state
+
+			// save new session state
 			session.setPaymentSignature(paymentSignature);
 			session.setPaidAmount(payment.getSumme());
-			session.setState(DbSession.State.PAID);
+			session.setState(State.PAID);
 			DatabaseHelper.SaveOrUpdate(session);
 			response.header(Consts.ProviderTokenHeader, session.getToken());
 			response.status(Consts.HttpStatuscodeOk);

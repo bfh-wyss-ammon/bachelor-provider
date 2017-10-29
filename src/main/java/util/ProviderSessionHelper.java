@@ -3,6 +3,7 @@ package util;
 import java.util.Date;
 import data.DbGroup;
 import data.DbSession;
+import data.State;
 public class ProviderSessionHelper {
 
 	public static DbSession getSession(DbGroup group) {
@@ -11,7 +12,7 @@ public class ProviderSessionHelper {
 			session.setGroup(group);
 			session.setToken(java.util.UUID.randomUUID().toString());
 			session.setCreated(new Date());
-			session.setState(DbSession.State.OPEN);
+			session.setState(State.OPEN);
 			return session;
 	}
 

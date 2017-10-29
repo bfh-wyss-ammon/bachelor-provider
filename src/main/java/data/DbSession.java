@@ -3,9 +3,6 @@ package data;
 import java.util.Date;
 
 public class DbSession {
-	public enum State {
-		OPEN, TUPLESENT, PAID
-	}
 
 	private int sessionId;
 
@@ -75,11 +72,11 @@ public class DbSession {
 		this.group = group;
 	}
 
-	public DbSession.State getState() {
+	public State getState() {
 		return state;
 	}
 
-	public void setState(DbSession.State state) {
+	public void setState(State state) {
 		this.state = state;
 	}
 
