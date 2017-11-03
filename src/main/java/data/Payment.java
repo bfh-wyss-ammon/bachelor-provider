@@ -1,13 +1,18 @@
 package data;
 
+import com.google.gson.annotations.Expose;
+
 import interfaces.HashValue;
 
 public class Payment {
 	
+	@Expose
 	@HashValue
     private int summe;
+	@Expose
 	private DbSignature signature;
 	@HashValue
+	@Expose
 	private String signatureOnTuples;
 	
 	public Payment() {

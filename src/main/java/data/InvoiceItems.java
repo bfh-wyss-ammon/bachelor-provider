@@ -15,6 +15,7 @@ public class InvoiceItems {
 	private String signature;
 
 	@HashValue
+	@Expose
 	private String sessionId;
 
 	public String getSessionId() {
