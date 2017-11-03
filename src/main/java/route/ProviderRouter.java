@@ -6,6 +6,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -14,6 +15,7 @@ import data.DbGroup;
 import data.DbSession;
 import data.DbSignature;
 import data.DbTuple;
+import data.DbVPayment;
 import data.DbVTuple;
 import data.InvoiceItems;
 import data.ProviderSettings;
@@ -66,10 +68,12 @@ public class ProviderRouter extends BaseRouter implements Router {
 					response.status(Consts.HttpBadRequest);
 					return "";
 				}
+				System.out.println("hash:" + Arrays.toString(hash));
 
 				DbTuple dbTuple = new DbTuple(tuple, group);
 				dbTuple.setReceived(new Date());
 				dbTuple.setHash(Base64.getEncoder().encodeToString(hash));
+				System.out.println("hashenocded:" + Base64.getEncoder().encodeToString(hash));
 				DatabaseHelper.Save(DbTuple.class, dbTuple);
 				response.status(Consts.HttpStatuscodeOk);
 			} catch (Exception ex) {
@@ -87,14 +91,16 @@ public class ProviderRouter extends BaseRouter implements Router {
 			String[] periods = new String[gracePeriods + 1];
 			DateTimeFormatter formatters = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
+			LocalDate date = LocalDate.now().minusDays(gracePeriods * periodLength);
+			
 			for (int i = 0; i <= gracePeriods; i++) {
-				periods[i] = formatters.format(LocalDate.now().minusDays(i * periodLength));
+				periods[i] = formatters.format(date.minusDays(-1 * i * periodLength));
 			}
 			return gson.toJson(periods);
 
 		});
 
-		get("/invoiceitems/:groupId/:periodId/", (request, response) -> {
+		get("/invoiceitems/:groupId/:periodId", (request, response) -> {
 
 			int groupId;
 			String strPeriod;
@@ -134,6 +140,11 @@ public class ProviderRouter extends BaseRouter implements Router {
 			// same list again
 			List<DbVTuple> tuples = DatabaseHelper.Get(DbVTuple.class, "groupId= '" + groupId + "'", "created", after,
 					before);
+			
+			if(tuples.size() == 0) {
+				response.status(Consts.HttpStatuscodeOk);
+				return "";
+			}
 
 			session.setInvoiceItemsCreated(new Date());
 
@@ -150,11 +161,10 @@ public class ProviderRouter extends BaseRouter implements Router {
 			session.setPeriod(period);
 			session.setState(State.TUPLESENT);
 			DatabaseHelper.Save(DbSession.class, session);
-			response.header(Consts.ProviderTokenHeader, session.getToken());
+			items.setSessionId(session.getToken());
 			response.status(Consts.HttpStatuscodeOk);
 
-			String result = gson.toJson(items);
-			return gson.toJson(result);
+			return gson.toJson(items);
 		});
 
 		post("/pay/:sessionId", (request, response) -> {
@@ -168,9 +178,9 @@ public class ProviderRouter extends BaseRouter implements Router {
 				return "";
 			}
 			DbSession session = null;
-			boolean groupOK = DatabaseHelper.Exists(DbSession.class, " token= ' " + sessionId + "'");
+			boolean groupOK = DatabaseHelper.Exists(DbSession.class, " token= '" + sessionId + "'");
 			if (groupOK) {
-				session = DatabaseHelper.Get(DbSession.class, " token= ' " + sessionId + "'");
+				session = DatabaseHelper.Get(DbSession.class, " token= '" + sessionId + "'");
 			}
 
 			// check session, state and payment
@@ -203,12 +213,29 @@ public class ProviderRouter extends BaseRouter implements Router {
 			session.setPaymentSignature(paymentSignature);
 			session.setPaidAmount(payment.getSumme());
 			session.setState(State.PAID);
-			DatabaseHelper.SaveOrUpdate(session);
-			response.header(Consts.ProviderTokenHeader, session.getToken());
+			DatabaseHelper.Save(DbSignature.class, paymentSignature);
+			DatabaseHelper.Update(session);
 			response.status(Consts.HttpStatuscodeOk);
 			return gson.toJson(signedReceipt);
 
 		});
+		
+		
+		get("/payments", (request, response) -> {
+			
+			String periodeId = request.params(":periodeId");
+			
+			List<DbVPayment> payments = (List<DbVPayment>)DatabaseHelper.Get(DbVPayment.class);
+			
+			//DatabaseHelper.Sum(DbSession.class, "paidAmount")
+			
+			// int isValue = 
+			
+			
+			
+			return gson.toJson(payments);
+		});
+		
 	}
 
 }

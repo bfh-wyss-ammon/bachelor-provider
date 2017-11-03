@@ -5,9 +5,9 @@
 			<generator class="identity" />
 		</id>
 		<many-to-one name="group" class="data.DbGroup" column="groupId"
-			unique="true" not-null="true" />
+			unique="true" not-null="true" lazy="false" fetch="select" />
 		<many-to-one name="paymentSignature" class="data.DbSignature"
-			column="signatureId" unique="true" not-null="false" />
+			column="signatureId" unique="true" not-null="false" lazy="false" fetch="select" cascade="all" />
 		<property name="period">
 			<column name="period" />
 		</property>

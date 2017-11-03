@@ -18,7 +18,7 @@ public class PeriodHelper {
 		int periodLength = settings.getPeriodLengthDays();
 		DateTimeFormatter formatters = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
-		for (int i = 0; i < gracePeriods; i++) {
+		for (int i = 0; i <= gracePeriods; i++) {
 			if (period.equals(formatters.format(LocalDate.now().minusDays(i * periodLength)))) {
 				return true;
 			}

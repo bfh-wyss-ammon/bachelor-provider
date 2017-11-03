@@ -13,6 +13,6 @@
         <mapping resource="vtuple.hbm.xml" />
         <mapping resource="signature.hbm.xml" />
         <mapping resource="session.hbm.xml" />
-        
+        <mapping resource="vpayment.hbm.xml" />
     </session-factory>
 </hibernate-configuration>
