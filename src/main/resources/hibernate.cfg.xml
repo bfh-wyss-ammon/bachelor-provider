@@ -10,6 +10,9 @@
         <mapping resource="group.hbm.xml" />
         <mapping resource="publicKey.hbm.xml" />
         <mapping resource="tuple.hbm.xml" />
+        <mapping resource="vtuple.hbm.xml" />
         <mapping resource="signature.hbm.xml" />
+        <mapping resource="session.hbm.xml" />
+        
     </session-factory>
 </hibernate-configuration>

@@ -22,5 +22,8 @@
 		<property name="received">
 			<column name="received" />
 		</property>
+		<property name="hash">
+			<column name="hash" />
+		</property>
 	</class>
 </hibernate-mapping>

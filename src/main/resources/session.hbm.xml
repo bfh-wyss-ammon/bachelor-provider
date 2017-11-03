@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping>
+	<class name="data.DbSession" table="session">
+		<id name="sessionId" type="int" column="sessionId">
+			<generator class="identity" />
+		</id>
+		<many-to-one name="group" class="data.DbGroup" column="groupId"
+			unique="true" not-null="true" />
+		<many-to-one name="paymentSignature" class="data.DbSignature"
+			column="signatureId" unique="true" not-null="false" />
+		<property name="period">
+			<column name="period" />
+		</property>
+		<property name="SignatureOnTuples">
+			<column name="SignatureOnTuples" />
+		</property>
+		<property name="paidAmount">
+			<column name="paidAmount" />
+		</property>
+		<property name="state" column="state">
+			<type name="org.hibernate.type.EnumType">
+				<param name="enumClass">data.State</param>
+				<param name="type">12</param>
+			</type>
+		</property>
+		<property name="token">
+			<column name="token" />
+		</property>
+		<property name="created">
+			<column name="created" />
+		</property>
+		<property name="invoiceItemsCreated">
+			<column name="invoiceItemsCreated" />
+		</property>
+	</class>
+</hibernate-mapping>
