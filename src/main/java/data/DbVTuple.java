@@ -10,24 +10,20 @@ public class DbVTuple {
 	private String hash;
 	@HashValue
 	private int price;
-	
+
 	private int tupleId;
-	
+
+	public DbVTuple() {
+
+	}
 
 	public int getTupleId() {
 		return tupleId;
 	}
 
-
 	public void setTupleId(int tupleId) {
 		this.tupleId = tupleId;
 	}
-
-
-	public DbVTuple() {
-		
-	}
-
 
 	public Date getCreated() {
 		return created;

@@ -6,6 +6,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
@@ -20,6 +21,7 @@ import data.DbVTuple;
 import data.InvoiceItems;
 import data.ProviderSettings;
 import data.Receipt;
+import data.Costs;
 import data.State;
 import data.Tuple;
 import data.Payment;
@@ -38,8 +40,12 @@ import util.VerifyHelper;
 public class ProviderRouter extends BaseRouter implements Router {
 
 	public ProviderRouter() {
+
+		// common instances
+
 		// load from setting
 		super(SettingsHelper.getSettings(ProviderSettings.class).getPort());
+
 	}
 
 	@Override
@@ -89,10 +95,10 @@ public class ProviderRouter extends BaseRouter implements Router {
 			int gracePeriods = settings.getGracePeriods();
 			int periodLength = settings.getPeriodLengthDays();
 			String[] periods = new String[gracePeriods + 1];
-			DateTimeFormatter formatters = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
+			DateTimeFormatter formatters = DateTimeFormatter
+					.ofPattern(SettingsHelper.getSettings(ProviderSettings.class).getPeriodFormat());
 			LocalDate date = LocalDate.now().minusDays(gracePeriods * periodLength);
-			
+
 			for (int i = 0; i <= gracePeriods; i++) {
 				periods[i] = formatters.format(date.minusDays(-1 * i * periodLength));
 			}
@@ -109,8 +115,7 @@ public class ProviderRouter extends BaseRouter implements Router {
 			try {
 				groupId = Integer.parseInt(request.params(":groupId"));
 				strPeriod = request.params(":periodId");
-				DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-				period = formatter.parse(strPeriod);
+				period = PeriodHelper.parse(strPeriod);
 			} catch (Exception e) {
 				response.status(Consts.HttpBadRequest);
 				return "";
@@ -140,8 +145,8 @@ public class ProviderRouter extends BaseRouter implements Router {
 			// same list again
 			List<DbVTuple> tuples = DatabaseHelper.Get(DbVTuple.class, "groupId= '" + groupId + "'", "created", after,
 					before);
-			
-			if(tuples.size() == 0) {
+
+			if (tuples.size() == 0) {
 				response.status(Consts.HttpStatuscodeOk);
 				return "";
 			}
@@ -168,7 +173,7 @@ public class ProviderRouter extends BaseRouter implements Router {
 		});
 
 		post("/pay/:sessionId", (request, response) -> {
-			String sessionId;
+			String sessionId = null;
 			Payment payment = null;
 			try {
 				sessionId = request.params(":sessionId");
@@ -178,9 +183,12 @@ public class ProviderRouter extends BaseRouter implements Router {
 				return "";
 			}
 			DbSession session = null;
-			boolean groupOK = DatabaseHelper.Exists(DbSession.class, " token= '" + sessionId + "'");
-			if (groupOK) {
-				session = DatabaseHelper.Get(DbSession.class, " token= '" + sessionId + "'");
+
+			if (sessionId != null && !sessionId.equals("")) {
+				session = ProviderSessionHelper.getSession(sessionId);
+			} else {
+				response.status(Consts.HttpBadRequest);
+				return "";
 			}
 
 			// check session, state and payment
@@ -219,23 +227,89 @@ public class ProviderRouter extends BaseRouter implements Router {
 			return gson.toJson(signedReceipt);
 
 		});
-		
-		
-		get("/payments", (request, response) -> {
-			
-			String periodeId = request.params(":periodeId");
-			
-			List<DbVPayment> payments = (List<DbVPayment>)DatabaseHelper.Get(DbVPayment.class);
-			
-			//DatabaseHelper.Sum(DbSession.class, "paidAmount")
-			
-			// int isValue = 
-			
-			
-			
+		// private route for the web application
+		get("/payments/:periodeId", (request, response) -> {
+
+			Date period = null;
+
+			try {
+				String periodeId = request.params(":periodeId");
+				period = PeriodHelper.parse(periodeId);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				response.status(Consts.HttpBadRequest);
+				return "";
+			}
+
+			if (period == null) {
+				response.status(Consts.HttpBadRequest);
+				return "";
+			}
+
+			String strCondition = PeriodHelper.dbFormat(period);
+			List<DbVPayment> payments = DatabaseHelper.GetList(DbVPayment.class, "period= '" + strCondition + "'");
+
+			if (payments.size() == 0) {
+				response.status(Consts.HttpStatuscodeOk);
+				return "";
+			}
+
+			response.status(Consts.HttpStatuscodeOk);
 			return gson.toJson(payments);
 		});
-		
+
+		// private route for the web application
+		get("/costs/:periodeId", (request, response) -> {
+
+			Date period = null;
+
+			try {
+				String periodeId = request.params(":periodeId");
+				period = PeriodHelper.parse(periodeId);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				response.status(Consts.HttpBadRequest);
+				return "";
+			}
+
+			if (period == null) {
+				response.status(Consts.HttpBadRequest);
+				return "";
+			}
+
+			Date after = PeriodHelper.getAfterLimit(period);
+			Date before = PeriodHelper.getBeforeLimit(period);
+			List<DbGroup> groups = DatabaseHelper.Get(DbGroup.class);
+			List<Costs> costs = new ArrayList<Costs>();
+
+			for (DbGroup group : groups) {
+				Costs cost = new Costs();
+				cost.setGroupId(group.getGroupId());
+				int sum = 0;
+
+				List<DbVTuple> tuples = DatabaseHelper.Get(DbVTuple.class,
+						"groupId= '" + group.getProviderGroupId() + "'", "created", after, before);
+
+				if (tuples.size() > 0) {
+					for (DbVTuple tuple : tuples) {
+						sum += tuple.getPrice();
+					}
+				}
+				cost.setSum(sum);
+				costs.add(cost);
+			}
+
+			if (costs.size() == 0) {
+				response.status(Consts.HttpStatuscodeOk);
+				return "";
+			}
+
+			response.status(Consts.HttpStatuscodeOk);
+			return gson.toJson(costs);
+		});
+
 	}
 
 }
