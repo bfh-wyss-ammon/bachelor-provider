@@ -26,7 +26,7 @@ public class PeriodHelper {
 		int gracePeriods = settings.getGracePeriods();
 		int periodLength = settings.getPeriodLengthDays();
 		LocalDate closedPeriod = LocalDate.now().minusDays(gracePeriods * periodLength + 1);
-
+		
 		Date after = PeriodHelper.getAfterLimit(closedPeriod);
 		Date before = PeriodHelper.getBeforeLimit(closedPeriod);
 

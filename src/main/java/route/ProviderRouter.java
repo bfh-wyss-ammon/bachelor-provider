@@ -60,7 +60,7 @@ public class ProviderRouter extends BaseRouter implements Router {
 					return "";
 				}
 				String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL();
-				if (!DatabaseHelper.Exists(DbGroup.class, " groupId= ' " + tuple.getGroupId() + "'")) {
+				if (!DatabaseHelper.Exists(DbGroup.class, " groupId= '" + tuple.getGroupId() + "'")) {
 					if (!GroupHelper.getGroupsFromAuthority(authorityURL, tuple.getGroupId())) {
 						response.status(Consts.HttpBadRequest);
 						return "";
