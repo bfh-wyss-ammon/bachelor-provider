@@ -1,9 +1,6 @@
 package route;
 
 import static spark.Spark.*;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -11,7 +8,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-
 import data.DbGroup;
 import data.DbSession;
 import data.DbSignature;
@@ -26,7 +22,6 @@ import data.State;
 import data.Tuple;
 import data.Payment;
 import rest.BaseRouter;
-import rest.Router;
 import util.Consts;
 import util.DatabaseHelper;
 import util.GroupHelper;
@@ -36,22 +31,22 @@ import util.ProviderSessionHelper;
 import util.ProviderSignatureHelper;
 import util.SettingsHelper;
 import util.VerifyHelper;
+import websocket.TupleUploadSocketHandler;
 
-public class ProviderRouter extends BaseRouter implements Router {
+public class ProviderRouter extends BaseRouter {
 
 	public ProviderRouter() {
-
-		// common instances
-
-		// load from setting
 		super(SettingsHelper.getSettings(ProviderSettings.class).getPort());
-
+	}
+	
+	@Override
+	public void WebSockets() {
+		webSocket("/sockets/live", TupleUploadSocketHandler.class);
 	}
 
 	@Override
-	public void start() {
-
-		post("/tuple", (request, response) -> {
+	public void Routes() {
+		post("/tuples", (request, response) -> {
 			try {
 				Tuple tuple = gson.fromJson(request.body(), Tuple.class);
 
@@ -60,14 +55,14 @@ public class ProviderRouter extends BaseRouter implements Router {
 					return "";
 				}
 				String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL();
-				if (!DatabaseHelper.Exists(DbGroup.class, " groupId= '" + tuple.getGroupId() + "'")) {
+				if (!DatabaseHelper.Exists(DbGroup.class, " groupId= " + tuple.getGroupId())) {
 					if (!GroupHelper.getGroupsFromAuthority(authorityURL, tuple.getGroupId())) {
 						response.status(Consts.HttpBadRequest);
 						return "";
 					}
 				}
 
-				DbGroup group = DatabaseHelper.Get(DbGroup.class, "groupId='" + tuple.getGroupId() + "'");
+				DbGroup group = DatabaseHelper.Get(DbGroup.class, "groupId="+tuple.getGroupId());
 				byte[] hash = HashHelper.getHash(tuple);
 				if (!VerifyHelper.verify(group.getPublicKey(), tuple.getSignature(), hash)) {
 					System.out.println("[post] /tuple bad signature");
@@ -227,6 +222,11 @@ public class ProviderRouter extends BaseRouter implements Router {
 			return gson.toJson(signedReceipt);
 
 		});
+	}
+
+	@Override
+	public void ProtectedRoutes() {
+
 		// private route for the web application
 		get("/payments/:periodeId", (request, response) -> {
 
@@ -261,9 +261,7 @@ public class ProviderRouter extends BaseRouter implements Router {
 
 		// private route for the web application
 		get("/costs/:periodeId", (request, response) -> {
-
 			Date period = null;
-
 			try {
 				String periodeId = request.params(":periodeId");
 				period = PeriodHelper.parse(periodeId);
@@ -309,7 +307,12 @@ public class ProviderRouter extends BaseRouter implements Router {
 			response.status(Consts.HttpStatuscodeOk);
 			return gson.toJson(costs);
 		});
-
 	}
 
+	public static void main(String[] args) {
+		new ProviderRouter();
+
+		// note (pa): just a useless request to warmup hibernate
+		DatabaseHelper.Exists(DbGroup.class, "groupId = 1");
+	}
 }
