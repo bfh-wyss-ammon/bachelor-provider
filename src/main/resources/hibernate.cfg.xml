@@ -14,5 +14,7 @@
         <mapping resource="signature.hbm.xml" />
         <mapping resource="session.hbm.xml" />
         <mapping resource="vpayment.hbm.xml" />
+        <mapping resource="disputesession.hbm.xml" />
+        <mapping resource="disputeresult.hbm.xml" />
     </session-factory>
 </hibernate-configuration>

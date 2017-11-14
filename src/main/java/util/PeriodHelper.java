@@ -18,15 +18,14 @@ import data.ProviderSettings;
 
 public class PeriodHelper {
 
-	public static List<DbGroup> getCheatingGroupsInClosedPeriod() {
-
-		List<DbGroup> result = new ArrayList<DbGroup>();
+	public static void checkClosedPeriod() {
 
 		ProviderSettings settings = SettingsHelper.getSettings(ProviderSettings.class);
 		int gracePeriods = settings.getGracePeriods();
 		int periodLength = settings.getPeriodLengthDays();
 		LocalDate closedPeriod = LocalDate.now().minusDays(gracePeriods * periodLength + 1);
-		
+		Date period = Date.from(closedPeriod.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
 		Date after = PeriodHelper.getAfterLimit(closedPeriod);
 		Date before = PeriodHelper.getBeforeLimit(closedPeriod);
 
@@ -52,11 +51,11 @@ public class PeriodHelper {
 					"period= '" + strPeriod + "' AND groupId= '" + group.getProviderGroupId() + "'");
 
 			if (sumOfCosts > payment.getTotal())
-				result.add(group);
+				DisputeResolveHelper.createResolveRequest(period, group);
 
 		}
 
-		return result;
+		return;
 	}
 
 	public static boolean isAllowed(String period) {

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping>
+	<class name="data.Discrepancy" table="disputeresult">
+		<id name="resultId" type="int" column="resultId">
+			<generator class="identity" />
+		</id>
+		<property name="userId">
+			<column name="userId" />
+		</property>
+		<property name="deltaToll">
+			<column name="deltaToll" />
+		</property>
+	</class>
+</hibernate-mapping>
