@@ -15,6 +15,17 @@ public class DbSession {
 	private DbSignature paymentSignature;
 	private String signatureOnTuples;
 	private int paidAmount;
+	private String hash;
+	
+	
+
+	public String getHash() {
+		return hash;
+	}
+
+	public void setHash(String hash) {
+		this.hash = hash;
+	}
 
 	public int getPaidAmount() {
 		return paidAmount;

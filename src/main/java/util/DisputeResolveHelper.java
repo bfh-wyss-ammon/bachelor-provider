@@ -1,16 +1,23 @@
 package util;
 
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
-import javax.net.ssl.HttpsURLConnection;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -23,6 +30,7 @@ import data.DisputeState;
 import data.PaymentTuple;
 import data.ProviderSettings;
 import data.ResolveRequest;
+import data.ResolveResult;
 import data.ResolveTuple;
 import util.SettingsHelper;
 import gson.BigIntegerTypeAdapter;
@@ -30,8 +38,7 @@ import signatures.Signature;
 
 public class DisputeResolveHelper {
 
-	
-	//request to authority
+	// request to authority
 	private static boolean sendResolveRequest(DbDisputeSession session, ResolveRequest r) {
 		Gson gson;
 		GsonBuilder builder = new GsonBuilder();
@@ -41,30 +48,42 @@ public class DisputeResolveHelper {
 		try {
 			String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL();
 			String disputeURL = authorityURL + "dispute";
-			URL url = new URL(disputeURL);
-			HttpURLConnection con = (HttpURLConnection) url.openConnection();
+			HttpClient client = HttpClientBuilder.create().build();
+			HttpPost post = new HttpPost(disputeURL);
+			// TODO set headers
+			// post.setHeader(arg0, arg1);
+			String contentToSend = gson.toJson(r);
+			HttpEntity entity = new ByteArrayEntity(contentToSend.getBytes("UTF-8"));
+			post.setEntity(entity);
 
-			// configure request
-			con.setRequestMethod("POST");
-			con.setConnectTimeout(20000);
-			// con.setRequestProperty("User-Agent", USER_AGENT);
-			// con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
+			HttpResponse response = client.execute(post);
+			InputStream inputStream = response.getEntity().getContent();
+			InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+			BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+			StringBuilder stringBuilder = new StringBuilder();
+			String bufferedStrChunk = null;
+			while ((bufferedStrChunk = bufferedReader.readLine()) != null) {
+				stringBuilder.append(bufferedStrChunk);
+			}
 
-			String content = gson.toJson(r);
-
-			// Send post request
-			con.setDoOutput(true);
-			DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-
-			wr.writeBytes(content);
-
-			wr.flush();
-			wr.close();
-
-			int responseCode = con.getResponseCode();
+			int responseCode = response.getStatusLine().getStatusCode();
 			if (responseCode == 200) {
 				session.setState(DisputeState.SENTTOAUTHORITY);
 				DatabaseHelper.Update(session);
+				String strResponse = stringBuilder.toString();
+
+				if (strResponse != "") {
+					ResolveResult res = gson.fromJson(strResponse, ResolveResult.class);
+					session.setDisputeResults(res.getRes());
+					session.setState(DisputeState.RESULTRECEIVED);
+					DatabaseHelper.Update(session);
+
+				} else {
+					session.setState(DisputeState.RESULTERROR);
+					DatabaseHelper.Update(session);
+					return false;
+				}
+
 				return true;
 			} else {
 				session.setState(DisputeState.SENDERROR);
@@ -81,11 +100,10 @@ public class DisputeResolveHelper {
 		}
 
 	}
-	
-	
-	//database helper method
+
+	// database helper method
 	private static DbDisputeSession saveDisputeSession(ResolveRequest r, DbGroup group, Date period) {
-		
+
 		DbDisputeSession session = new DbDisputeSession();
 		session.setCreated(new Date());
 		session.setGroup(group);
@@ -94,7 +112,7 @@ public class DisputeResolveHelper {
 		session.setState(DisputeState.CREATED);
 		DatabaseHelper.Save(DbDisputeSession.class, session);
 		return session;
-		
+
 	}
 
 	public static void createResolveRequest(Date period, DbGroup group) {
@@ -135,6 +153,7 @@ public class DisputeResolveHelper {
 			r.setTollPaid(sess.getPaidAmount());
 			r.setSessionId(sess.getToken());
 			r.setUserSignature((Signature) sess.getPaymentSignature());
+			r.setHash(sess.getHash());
 
 			// now rebuild the list that was sent to the client during this toll session
 			Date lCreated = sess.getInvoiceItemsCreated();
@@ -157,9 +176,9 @@ public class DisputeResolveHelper {
 		byte[] hash = HashHelper.getHash(request);
 		String signedRequest = Base64.getEncoder().encodeToString(ProviderSignatureHelper.sign(hash));
 		request.setProviderSignature(signedRequest);
-		
-		//now save the data to db and send request
-		DbDisputeSession session = saveDisputeSession(request,group,period);
+
+		// now save the data to db and send request
+		DbDisputeSession session = saveDisputeSession(request, group, period);
 		sendResolveRequest(session, request);
 		return;
 

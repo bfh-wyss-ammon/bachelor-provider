@@ -15,49 +15,40 @@ public class DbDisputeSession {
 	private String signatureOnResult;
 
 	public DbDisputeSession() {
-		
+
 	}
-	
 
 	public Date getPeriod() {
 		return period;
 	}
 
-
 	public void setPeriod(Date period) {
 		this.period = period;
 	}
-
 
 	public List getDisputeResults() {
 		return disputeResults;
 	}
 
-
 	public void setDisputeResults(List disputeResults) {
 		this.disputeResults = disputeResults;
 	}
-
 
 	public DisputeState getState() {
 		return state;
 	}
 
-
 	public void setState(DisputeState state) {
 		this.state = state;
 	}
-
 
 	public String getSignatureOnResult() {
 		return signatureOnResult;
 	}
 
-
 	public void setSignatureOnResult(String signatureOnResult) {
 		this.signatureOnResult = signatureOnResult;
 	}
-
 
 	public int getSessionId() {
 		return sessionId;
