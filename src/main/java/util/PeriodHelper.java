@@ -18,17 +18,9 @@ import data.ProviderSettings;
 
 public class PeriodHelper {
 
-	public static List<DbGroup> getCheatingGroupsInClosedPeriod() {
-
-		List<DbGroup> result = new ArrayList<DbGroup>();
-
-		ProviderSettings settings = SettingsHelper.getSettings(ProviderSettings.class);
-		int gracePeriods = settings.getGracePeriods();
-		int periodLength = settings.getPeriodLengthDays();
-		LocalDate closedPeriod = LocalDate.now().minusDays(gracePeriods * periodLength + 1);
-		
-		Date after = PeriodHelper.getAfterLimit(closedPeriod);
-		Date before = PeriodHelper.getBeforeLimit(closedPeriod);
+	public static void checkPeriod(Date periode) {
+		Date after = PeriodHelper.getAfterLimit(periode);
+		Date before = PeriodHelper.getBeforeLimit(periode);
 
 		List<DbGroup> groups = DatabaseHelper.Get(DbGroup.class);
 
@@ -37,7 +29,7 @@ public class PeriodHelper {
 			int sumOfCosts = 0;
 
 			// get the cost for this group
-			List<DbVTuple> tuples = DatabaseHelper.Get(DbVTuple.class, "groupId= '" + group.getProviderGroupId() + "'",
+			List<DbVTuple> tuples = DatabaseHelper.Get(DbVTuple.class, "groupId= '" + group.getGroupId() + "'",
 					"created", after, before);
 
 			if (tuples.size() > 0) {
@@ -47,16 +39,31 @@ public class PeriodHelper {
 			}
 
 			// get the payment total for this group
-			String strPeriod = PeriodHelper.dbFormat(closedPeriod);
-			DbVPayment payment = DatabaseHelper.Get(DbVPayment.class,
-					"period= '" + strPeriod + "' AND groupId= '" + group.getProviderGroupId() + "'");
+			String strPeriod = PeriodHelper.dbFormat(periode);
 
-			if (sumOfCosts > payment.getTotal())
-				result.add(group);
+			if (DatabaseHelper.Exists(DbVPayment.class,
+					"period= '" + strPeriod + "' AND groupId= '" + group.getGroupId() + "'")) {
+				DbVPayment payment = DatabaseHelper.Get(DbVPayment.class,
+						"period= '" + strPeriod + "' AND groupId= '" + group.getGroupId() + "'");
 
+				if (sumOfCosts > payment.getTotal())
+					DisputeResolveHelper.createResolveRequest(periode, group);
+			}
+			else {
+				DisputeResolveHelper.createResolveRequest(periode, group);
+			}
 		}
+	}
 
-		return result;
+	public static void checkClosedPeriod() {
+
+		ProviderSettings settings = SettingsHelper.getSettings(ProviderSettings.class);
+		int gracePeriods = settings.getGracePeriods();
+		int periodLength = settings.getPeriodLengthDays();
+		LocalDate closedPeriod = LocalDate.now().minusDays(gracePeriods * periodLength + 1);
+		Date period = Date.from(closedPeriod.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+		checkPeriod(period);
 	}
 
 	public static boolean isAllowed(String period) {

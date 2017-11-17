@@ -26,6 +26,9 @@
 		<property name="token">
 			<column name="token" />
 		</property>
+		<property name="hash">
+			<column name="hash" />
+		</property>
 		<property name="created">
 			<column name="created" />
 		</property>

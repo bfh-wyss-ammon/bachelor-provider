@@ -1,6 +1,9 @@
 package route;
 
 import static spark.Spark.*;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -14,8 +17,11 @@ import data.DbSignature;
 import data.DbTuple;
 import data.DbVPayment;
 import data.DbVTuple;
+import data.Discrepancy;
 import data.InvoiceItems;
 import data.ProviderSettings;
+import data.DisputeSessionView;
+import data.DbDisputeSession;
 import data.Receipt;
 import data.Costs;
 import data.State;
@@ -24,6 +30,7 @@ import data.Payment;
 import rest.BaseRouter;
 import util.Consts;
 import util.DatabaseHelper;
+import util.DisputeResolveHelper;
 import util.GroupHelper;
 import util.HashHelper;
 import util.PeriodHelper;
@@ -36,9 +43,10 @@ import websocket.TupleUploadSocketHandler;
 public class ProviderRouter extends BaseRouter {
 
 	public ProviderRouter() {
-		super(SettingsHelper.getSettings(ProviderSettings.class).getPort());
+		super(SettingsHelper.getSettings(ProviderSettings.class).getPort(),
+				SettingsHelper.getSettings(ProviderSettings.class).getToken());
 	}
-	
+
 	@Override
 	public void WebSockets() {
 		webSocket("/sockets/live", TupleUploadSocketHandler.class);
@@ -62,7 +70,7 @@ public class ProviderRouter extends BaseRouter {
 					}
 				}
 
-				DbGroup group = DatabaseHelper.Get(DbGroup.class, "groupId="+tuple.getGroupId());
+				DbGroup group = DatabaseHelper.Get(DbGroup.class, "groupId=" + tuple.getGroupId());
 				byte[] hash = HashHelper.getHash(tuple);
 				if (!VerifyHelper.verify(group.getPublicKey(), tuple.getSignature(), hash)) {
 					System.out.println("[post] /tuple bad signature");
@@ -77,6 +85,9 @@ public class ProviderRouter extends BaseRouter {
 				System.out.println("hashenocded:" + Base64.getEncoder().encodeToString(hash));
 				DatabaseHelper.Save(DbTuple.class, dbTuple);
 				response.status(Consts.HttpStatuscodeOk);
+
+				TupleUploadSocketHandler.Send(request.body());
+
 			} catch (Exception ex) {
 				System.out.println("[post] /tuple error:" + ex.getMessage());
 				response.status(Consts.HttpBadRequest);
@@ -213,6 +224,7 @@ public class ProviderRouter extends BaseRouter {
 			String signedReceipt = Base64.getEncoder().encodeToString(ProviderSignatureHelper.sign(hash));
 
 			// save new session state
+			session.setHash(Base64.getEncoder().encodeToString(messageHash));
 			session.setPaymentSignature(paymentSignature);
 			session.setPaidAmount(payment.getSumme());
 			session.setState(State.PAID);
@@ -287,8 +299,8 @@ public class ProviderRouter extends BaseRouter {
 				cost.setGroupId(group.getGroupId());
 				int sum = 0;
 
-				List<DbVTuple> tuples = DatabaseHelper.Get(DbVTuple.class,
-						"groupId= '" + group.getProviderGroupId() + "'", "created", after, before);
+				List<DbVTuple> tuples = DatabaseHelper.Get(DbVTuple.class, "groupId= '" + group.getGroupId() + "'",
+						"created", after, before);
 
 				if (tuples.size() > 0) {
 					for (DbVTuple tuple : tuples) {
@@ -306,6 +318,71 @@ public class ProviderRouter extends BaseRouter {
 
 			response.status(Consts.HttpStatuscodeOk);
 			return gson.toJson(costs);
+		});
+
+		get("/resolve/:periodeId", (request, response) -> {
+			Date period = null;
+			try {
+				String periodeId = request.params(":periodeId");
+				period = PeriodHelper.parse(periodeId);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				response.status(Consts.HttpBadRequest);
+				return "";
+			}
+
+			if (period == null) {
+				response.status(Consts.HttpBadRequest);
+				return "";
+			}
+
+			PeriodHelper.checkPeriod(period);
+			response.status(Consts.HttpStatuscodeOk);
+			return "";
+		});
+
+		// private route for the web application
+		get("/dispute/:periodeId", (request, response) -> {
+			Date period = null;
+			try {
+				String periodeId = request.params(":periodeId");
+				period = PeriodHelper.parse(periodeId);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				response.status(Consts.HttpBadRequest);
+				return "";
+			}
+
+			if (period == null) {
+				response.status(Consts.HttpBadRequest);
+				return "";
+			}
+
+			DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String strPeriod = format.format(period);
+			List<DisputeSessionView> disputes = new ArrayList<DisputeSessionView>();
+			List<DbDisputeSession> sessions = DatabaseHelper.GetList(DbDisputeSession.class,
+					"period= '" + strPeriod + "'");
+
+			for (DbDisputeSession s : sessions) {
+				DisputeSessionView view = new DisputeSessionView();
+				view.setState(s.getState());
+				view.setGroup(s.getGroup().getGroupId());
+
+				view.setDisputeResults((List<Discrepancy>) DatabaseHelper.GetList(Discrepancy.class,
+						"disputesessionId =" + s.getSessionId()));
+				disputes.add(view);
+			}
+
+			if (disputes.size() == 0) {
+				response.status(Consts.HttpStatuscodeOk);
+				return "";
+			}
+
+			response.status(Consts.HttpStatuscodeOk);
+			return gson.toJson(disputes);
 		});
 	}
 
