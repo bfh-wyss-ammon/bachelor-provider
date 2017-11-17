@@ -22,10 +22,12 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import data.BaseSignature;
 import data.DbDisputeSession;
 import data.DbGroup;
 import data.DbSession;
 import data.DbTuple;
+import data.Discrepancy;
 import data.DisputeState;
 import data.PaymentTuple;
 import data.ProviderSettings;
@@ -47,7 +49,7 @@ public class DisputeResolveHelper {
 
 		try {
 			String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL();
-			String disputeURL = authorityURL + "dispute";
+			String disputeURL = authorityURL + "api/dispute";
 			HttpClient client = HttpClientBuilder.create().build();
 			HttpPost post = new HttpPost(disputeURL);
 			// TODO set headers
@@ -71,10 +73,23 @@ public class DisputeResolveHelper {
 				session.setState(DisputeState.SENTTOAUTHORITY);
 				DatabaseHelper.Update(session);
 				String strResponse = stringBuilder.toString();
+				
+				System.out.println(strResponse);
 
 				if (strResponse != "") {
 					ResolveResult res = gson.fromJson(strResponse, ResolveResult.class);
-					session.setDisputeResults(res.getRes());
+					
+					List<Discrepancy> discrepancies = res.getRes();
+					
+					for(int i = 0; i < discrepancies.size(); i++) {
+						Discrepancy d = discrepancies.get(i);
+						d.setDisputeSessionId(session.getSessionId());
+						int id = DatabaseHelper.Save(Discrepancy.class, d);
+						d.setResultId(id);
+					}
+						
+					
+					session.setDisputeResults(discrepancies);
 					session.setState(DisputeState.RESULTRECEIVED);
 					DatabaseHelper.Update(session);
 
@@ -122,7 +137,7 @@ public class DisputeResolveHelper {
 		// input data
 		Date after = PeriodHelper.getAfterLimit(period);
 		Date before = PeriodHelper.getBeforeLimit(period);
-		int groupId = group.getGroupId();
+		int groupId = group.getProviderGroupId();
 
 		// getting S
 		List<ResolveTuple> s = new ArrayList<ResolveTuple>();
@@ -137,8 +152,12 @@ public class DisputeResolveHelper {
 			ResolveTuple r = new ResolveTuple();
 			r.setHash(t.getHash());
 			r.setPrice(1);
-			r.setSignature((Signature) t.getSignature());
+			r.setSignature(new BaseSignature(t.getSignature()));
 			s.add(r);
+
+			System.out.println(t.getHash());
+
+			System.out.println(VerifyHelper.verify(group.getPublicKey(), t.getSignature(), Base64.getDecoder().decode(t.getHash())));
 		}
 
 		// getting T
@@ -152,8 +171,9 @@ public class DisputeResolveHelper {
 			r.setProviderSignature(sess.getSignatureOnTuples());
 			r.setTollPaid(sess.getPaidAmount());
 			r.setSessionId(sess.getToken());
-			r.setUserSignature((Signature) sess.getPaymentSignature());
+			r.setUserSignature(new BaseSignature(sess.getPaymentSignature()));
 			r.setHash(sess.getHash());
+			
 
 			// now rebuild the list that was sent to the client during this toll session
 			Date lCreated = sess.getInvoiceItemsCreated();
@@ -171,7 +191,7 @@ public class DisputeResolveHelper {
 
 		request.setS(s);
 		request.setT(t);
-		request.setGroupId(groupId);
+		request.setGroupId(group.getGroupId());
 		request.setDisputeSessionId(java.util.UUID.randomUUID().toString());
 		byte[] hash = HashHelper.getHash(request);
 		String signedRequest = Base64.getEncoder().encodeToString(ProviderSignatureHelper.sign(hash));

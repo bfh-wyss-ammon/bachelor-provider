@@ -10,5 +10,8 @@
 		<property name="deltaToll">
 			<column name="deltaToll" />
 		</property>
+		<property name="disputeSessionId">
+			<column name="disputesessionId" />
+		</property>
 	</class>
 </hibernate-mapping>

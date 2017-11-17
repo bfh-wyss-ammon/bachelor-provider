@@ -30,6 +30,7 @@ import data.Payment;
 import rest.BaseRouter;
 import util.Consts;
 import util.DatabaseHelper;
+import util.DisputeResolveHelper;
 import util.GroupHelper;
 import util.HashHelper;
 import util.PeriodHelper;
@@ -42,7 +43,8 @@ import websocket.TupleUploadSocketHandler;
 public class ProviderRouter extends BaseRouter {
 
 	public ProviderRouter() {
-		super(SettingsHelper.getSettings(ProviderSettings.class).getPort());
+		super(SettingsHelper.getSettings(ProviderSettings.class).getPort(),
+				SettingsHelper.getSettings(ProviderSettings.class).getToken());
 	}
 
 	@Override
@@ -83,6 +85,9 @@ public class ProviderRouter extends BaseRouter {
 				System.out.println("hashenocded:" + Base64.getEncoder().encodeToString(hash));
 				DatabaseHelper.Save(DbTuple.class, dbTuple);
 				response.status(Consts.HttpStatuscodeOk);
+
+				TupleUploadSocketHandler.Send(request.body());
+
 			} catch (Exception ex) {
 				System.out.println("[post] /tuple error:" + ex.getMessage());
 				response.status(Consts.HttpBadRequest);
@@ -294,8 +299,8 @@ public class ProviderRouter extends BaseRouter {
 				cost.setGroupId(group.getGroupId());
 				int sum = 0;
 
-				List<DbVTuple> tuples = DatabaseHelper.Get(DbVTuple.class,
-						"groupId= '" + group.getProviderGroupId() + "'", "created", after, before);
+				List<DbVTuple> tuples = DatabaseHelper.Get(DbVTuple.class, "groupId= '" + group.getGroupId() + "'",
+						"created", after, before);
 
 				if (tuples.size() > 0) {
 					for (DbVTuple tuple : tuples) {
@@ -313,6 +318,28 @@ public class ProviderRouter extends BaseRouter {
 
 			response.status(Consts.HttpStatuscodeOk);
 			return gson.toJson(costs);
+		});
+
+		get("/resolve/:periodeId", (request, response) -> {
+			Date period = null;
+			try {
+				String periodeId = request.params(":periodeId");
+				period = PeriodHelper.parse(periodeId);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				response.status(Consts.HttpBadRequest);
+				return "";
+			}
+
+			if (period == null) {
+				response.status(Consts.HttpBadRequest);
+				return "";
+			}
+
+			PeriodHelper.checkPeriod(period);
+			response.status(Consts.HttpStatuscodeOk);
+			return "";
 		});
 
 		// private route for the web application
@@ -343,7 +370,9 @@ public class ProviderRouter extends BaseRouter {
 				DisputeSessionView view = new DisputeSessionView();
 				view.setState(s.getState());
 				view.setGroup(s.getGroup().getGroupId());
-				view.setDisputeResults((List<Discrepancy>) s.getDisputeResults());
+
+				view.setDisputeResults((List<Discrepancy>) DatabaseHelper.GetList(Discrepancy.class,
+						"disputesessionId =" + s.getSessionId()));
 				disputes.add(view);
 			}
 
