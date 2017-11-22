@@ -11,12 +11,13 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.google.gson.Gson;
@@ -48,9 +49,19 @@ public class DisputeResolveHelper {
 		gson = builder.excludeFieldsWithoutExposeAnnotation().create();
 
 		try {
+			
+			//timout handling
+			int timeout = 20;
+			RequestConfig config = RequestConfig.custom()
+			  .setConnectTimeout(timeout * 1000)
+			  .setConnectionRequestTimeout(timeout * 1000)
+			  .setSocketTimeout(timeout * 1000).build();
+			CloseableHttpClient client = 
+			  HttpClientBuilder.create().setDefaultRequestConfig(config).build();
+			
 			String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL();
 			String disputeURL = authorityURL + "api/dispute";
-			HttpClient client = HttpClientBuilder.create().build();
+			//HttpClient client = HttpClientBuilder.create().build();
 			HttpPost post = new HttpPost(disputeURL);
 			// TODO set headers
 			// post.setHeader(arg0, arg1);
@@ -73,22 +84,31 @@ public class DisputeResolveHelper {
 				session.setState(DisputeState.SENTTOAUTHORITY);
 				DatabaseHelper.Update(session);
 				String strResponse = stringBuilder.toString();
-				
+
 				System.out.println(strResponse);
 
 				if (strResponse != "") {
 					ResolveResult res = gson.fromJson(strResponse, ResolveResult.class);
-					
+
+					byte[] sigBytes = Base64.getDecoder().decode(res.getAuthoritySignature());
+					byte[] message = HashHelper.getHash(res);
+
+					// check the authority signature on res
+					if (!ProviderSignatureHelper.verifyAuthorityMessage(message, sigBytes)) {
+						session.setState(DisputeState.RESULTERROR);
+						DatabaseHelper.Update(session);
+						return false;
+					}
+
 					List<Discrepancy> discrepancies = res.getRes();
-					
-					for(int i = 0; i < discrepancies.size(); i++) {
+
+					for (int i = 0; i < discrepancies.size(); i++) {
 						Discrepancy d = discrepancies.get(i);
 						d.setDisputeSessionId(session.getSessionId());
 						int id = DatabaseHelper.Save(Discrepancy.class, d);
 						d.setResultId(id);
 					}
-						
-					
+
 					session.setDisputeResults(discrepancies);
 					session.setState(DisputeState.RESULTRECEIVED);
 					DatabaseHelper.Update(session);
@@ -154,10 +174,6 @@ public class DisputeResolveHelper {
 			r.setPrice(1);
 			r.setSignature(new BaseSignature(t.getSignature()));
 			s.add(r);
-
-			System.out.println(t.getHash());
-
-			System.out.println(VerifyHelper.verify(group.getPublicKey(), t.getSignature(), Base64.getDecoder().decode(t.getHash())));
 		}
 
 		// getting T
@@ -173,7 +189,6 @@ public class DisputeResolveHelper {
 			r.setSessionId(sess.getToken());
 			r.setUserSignature(new BaseSignature(sess.getPaymentSignature()));
 			r.setHash(sess.getHash());
-			
 
 			// now rebuild the list that was sent to the client during this toll session
 			Date lCreated = sess.getInvoiceItemsCreated();
@@ -194,6 +209,7 @@ public class DisputeResolveHelper {
 		request.setGroupId(group.getGroupId());
 		request.setDisputeSessionId(java.util.UUID.randomUUID().toString());
 		byte[] hash = HashHelper.getHash(request);
+
 		String signedRequest = Base64.getEncoder().encodeToString(ProviderSignatureHelper.sign(hash));
 		request.setProviderSignature(signedRequest);
 
