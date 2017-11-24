@@ -54,6 +54,11 @@ public class ProviderRouter extends BaseRouter {
 
 	@Override
 	public void Routes() {
+		get("/status",  (request, response) -> {
+			response.status(Consts.HttpStatuscodeOk);
+			return "";
+		});
+		
 		post("/tuples", (request, response) -> {
 			try {
 				Tuple tuple = gson.fromJson(request.body(), Tuple.class);
