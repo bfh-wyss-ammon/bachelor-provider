@@ -32,6 +32,7 @@ import data.Discrepancy;
 import data.DisputeState;
 import data.PaymentTuple;
 import data.ProviderSettings;
+import data.CommonSettings;
 import data.ResolveRequest;
 import data.ResolveResult;
 import data.ResolveTuple;
@@ -40,9 +41,104 @@ import gson.BigIntegerTypeAdapter;
 import signatures.Signature;
 
 public class DisputeResolveHelper {
+	
+	private static boolean sendResolveRequest(DbDisputeSession session, ResolveRequest r) {
+		CommonSettings settings = SettingsHelper.getSettings(CommonSettings.class);
+		if(settings.isTls()) {
+			return sendResolveRequestHTTPS(session, r);
+		} else {
+			return sendResolveRequestHTTP(session, r);
+		}
+	}
+	
+	private static boolean sendResolveRequestHTTPS(DbDisputeSession session, ResolveRequest r) {
+		Gson gson;
+		GsonBuilder builder = new GsonBuilder();
+		builder.registerTypeAdapter(BigInteger.class, new BigIntegerTypeAdapter());
+		gson = builder.excludeFieldsWithoutExposeAnnotation().create();
+
+		try {
+			CloseableHttpClient client = (CloseableHttpClient) HttpClientFactory.getHttpsClient();
+			
+			String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityTLSURL();
+			String disputeURL = authorityURL + "api/dispute";
+			HttpPost post = new HttpPost(disputeURL);
+			// TODO set headers
+			// post.setHeader(arg0, arg1);
+			String contentToSend = gson.toJson(r);
+			HttpEntity entity = new ByteArrayEntity(contentToSend.getBytes("UTF-8"));
+			post.setEntity(entity);
+
+			HttpResponse response = client.execute(post);
+			InputStream inputStream = response.getEntity().getContent();
+			InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+			BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+			StringBuilder stringBuilder = new StringBuilder();
+			String bufferedStrChunk = null;
+			while ((bufferedStrChunk = bufferedReader.readLine()) != null) {
+				stringBuilder.append(bufferedStrChunk);
+			}
+
+			int responseCode = response.getStatusLine().getStatusCode();
+			if (responseCode == 200) {
+				session.setState(DisputeState.SENTTOAUTHORITY);
+				DatabaseHelper.Update(session);
+				String strResponse = stringBuilder.toString();
+
+				System.out.println(strResponse);
+
+				if (strResponse != "") {
+					ResolveResult res = gson.fromJson(strResponse, ResolveResult.class);
+
+					byte[] sigBytes = Base64.getDecoder().decode(res.getAuthoritySignature());
+					byte[] message = HashHelper.getHash(res);
+
+					// check the authority signature on res
+					if (!ProviderSignatureHelper.verifyAuthorityMessage(message, sigBytes)) {
+						session.setState(DisputeState.RESULTERROR);
+						DatabaseHelper.Update(session);
+						return false;
+					}
+
+					List<Discrepancy> discrepancies = res.getRes();
+
+					for (int i = 0; i < discrepancies.size(); i++) {
+						Discrepancy d = discrepancies.get(i);
+						d.setDisputeSessionId(session.getSessionId());
+						int id = DatabaseHelper.Save(Discrepancy.class, d);
+						d.setResultId(id);
+					}
+
+					session.setDisputeResults(discrepancies);
+					session.setState(DisputeState.RESULTRECEIVED);
+					DatabaseHelper.Update(session);
+
+				} else {
+					session.setState(DisputeState.RESULTERROR);
+					DatabaseHelper.Update(session);
+					return false;
+				}
+
+				return true;
+			} else {
+				session.setState(DisputeState.SENDERROR);
+				DatabaseHelper.Update(session);
+				return false;
+			}
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			session.setState(DisputeState.SENDERROR);
+			DatabaseHelper.Update(session);
+			return false;
+		}
+
+		
+	}
 
 	// request to authority
-	private static boolean sendResolveRequest(DbDisputeSession session, ResolveRequest r) {
+	private static boolean sendResolveRequestHTTP(DbDisputeSession session, ResolveRequest r) {
 		Gson gson;
 		GsonBuilder builder = new GsonBuilder();
 		builder.registerTypeAdapter(BigInteger.class, new BigIntegerTypeAdapter());

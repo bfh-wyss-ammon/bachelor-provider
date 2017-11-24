@@ -15,6 +15,7 @@ import data.DbGroup;
 import data.DbVPayment;
 import data.DbVTuple;
 import data.ProviderSettings;
+import data.CommonSettings;
 
 public class PeriodHelper {
 

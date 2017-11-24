@@ -19,7 +19,7 @@ import data.DbVPayment;
 import data.DbVTuple;
 import data.Discrepancy;
 import data.InvoiceItems;
-import data.ProviderSettings;
+import data.CommonSettings;
 import data.DisputeSessionView;
 import data.DbDisputeSession;
 import data.Receipt;
@@ -27,6 +27,7 @@ import data.Costs;
 import data.State;
 import data.Tuple;
 import data.Payment;
+import data.ProviderSettings;
 import rest.BaseRouter;
 import util.Consts;
 import util.DatabaseHelper;
@@ -62,9 +63,8 @@ public class ProviderRouter extends BaseRouter {
 					response.status(Consts.HttpBadRequest);
 					return "";
 				}
-				String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL();
 				if (!DatabaseHelper.Exists(DbGroup.class, " groupId= " + tuple.getGroupId())) {
-					if (!GroupHelper.getGroupsFromAuthority(authorityURL, tuple.getGroupId())) {
+					if (!GroupHelper.getGroupsFromAuthority(tuple.getGroupId())) {
 						response.status(Consts.HttpBadRequest);
 						return "";
 					}
@@ -102,7 +102,7 @@ public class ProviderRouter extends BaseRouter {
 			int periodLength = settings.getPeriodLengthDays();
 			String[] periods = new String[gracePeriods + 1];
 			DateTimeFormatter formatters = DateTimeFormatter
-					.ofPattern(SettingsHelper.getSettings(ProviderSettings.class).getPeriodFormat());
+					.ofPattern(settings.getPeriodFormat());
 			LocalDate date = LocalDate.now().minusDays(gracePeriods * periodLength);
 
 			for (int i = 0; i <= gracePeriods; i++) {

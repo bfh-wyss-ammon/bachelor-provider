@@ -6,6 +6,7 @@ import java.util.Date;
 import data.DbGroup;
 import data.DbSession;
 import data.ProviderSettings;
+import data.CommonSettings;
 import data.State;
 
 public class ProviderSessionHelper {

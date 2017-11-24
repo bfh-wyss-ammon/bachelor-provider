@@ -5,6 +5,7 @@ import java.security.spec.X509EncodedKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
 
+import data.CommonSettings;
 import data.ProviderSettings;
 
 
