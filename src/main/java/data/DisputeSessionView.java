@@ -1,3 +1,9 @@
+/**
+ * This class gets data related to the result and state of the dispute resolving sessions for the selected period from the database of the provider.
+ * It is also used for serializing to JSON for the web application.
+ */
+
+
 package data;
 
 import java.util.Date;

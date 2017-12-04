@@ -1,3 +1,7 @@
+/**
+ * This is the main executable class of the provider. It specifies how all of the API-Paths work.
+ */
+
 package route;
 
 import static spark.Spark.*;
@@ -19,7 +23,6 @@ import data.DbVPayment;
 import data.DbVTuple;
 import data.Discrepancy;
 import data.InvoiceItems;
-import data.CommonSettings;
 import data.DisputeSessionView;
 import data.DbDisputeSession;
 import data.Receipt;
@@ -31,7 +34,6 @@ import data.ProviderSettings;
 import rest.BaseRouter;
 import util.Consts;
 import util.DatabaseHelper;
-import util.DisputeResolveHelper;
 import util.GroupHelper;
 import util.HashHelper;
 import util.PeriodHelper;
@@ -101,8 +103,7 @@ public class ProviderRouter extends BaseRouter {
 			int gracePeriods = settings.getGracePeriods();
 			int periodLength = settings.getPeriodLengthDays();
 			String[] periods = new String[gracePeriods + 1];
-			DateTimeFormatter formatters = DateTimeFormatter
-					.ofPattern(settings.getPeriodFormat());
+			DateTimeFormatter formatters = DateTimeFormatter.ofPattern(settings.getPeriodFormat());
 			LocalDate date = LocalDate.now().minusDays(gracePeriods * periodLength);
 
 			for (int i = 0; i <= gracePeriods; i++) {

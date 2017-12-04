@@ -1,3 +1,7 @@
+/**
+ * This class stores all data related to a dispute resolving session in the database of the provider.
+ */
+
 package data;
 
 import java.util.Date;

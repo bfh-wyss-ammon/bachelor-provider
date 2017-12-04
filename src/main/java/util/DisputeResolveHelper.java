@@ -1,3 +1,7 @@
+/**
+ * This class executes the dispute resolving protocol with the authority (implements provider part).
+ */
+
 package util;
 
 import java.io.BufferedReader;
@@ -41,16 +45,16 @@ import gson.BigIntegerTypeAdapter;
 import signatures.Signature;
 
 public class DisputeResolveHelper {
-	
+
 	private static boolean sendResolveRequest(DbDisputeSession session, ResolveRequest r) {
 		CommonSettings settings = SettingsHelper.getSettings(CommonSettings.class);
-		if(settings.isTls()) {
+		if (settings.isTls()) {
 			return sendResolveRequestHTTPS(session, r);
 		} else {
 			return sendResolveRequestHTTP(session, r);
 		}
 	}
-	
+
 	private static boolean sendResolveRequestHTTPS(DbDisputeSession session, ResolveRequest r) {
 		Gson gson;
 		GsonBuilder builder = new GsonBuilder();
@@ -59,7 +63,7 @@ public class DisputeResolveHelper {
 
 		try {
 			CloseableHttpClient client = (CloseableHttpClient) HttpClientFactory.getHttpsClient();
-			
+
 			String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityTLSURL();
 			String disputeURL = authorityURL + "api/dispute";
 			HttpPost post = new HttpPost(disputeURL);
@@ -134,7 +138,6 @@ public class DisputeResolveHelper {
 			return false;
 		}
 
-		
 	}
 
 	// request to authority
@@ -145,19 +148,16 @@ public class DisputeResolveHelper {
 		gson = builder.excludeFieldsWithoutExposeAnnotation().create();
 
 		try {
-			
-			//timout handling
+
+			// timout handling
 			int timeout = 20;
-			RequestConfig config = RequestConfig.custom()
-			  .setConnectTimeout(timeout * 1000)
-			  .setConnectionRequestTimeout(timeout * 1000)
-			  .setSocketTimeout(timeout * 1000).build();
-			CloseableHttpClient client = 
-			  HttpClientBuilder.create().setDefaultRequestConfig(config).build();
-			
+			RequestConfig config = RequestConfig.custom().setConnectTimeout(timeout * 1000)
+					.setConnectionRequestTimeout(timeout * 1000).setSocketTimeout(timeout * 1000).build();
+			CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
+
 			String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL();
 			String disputeURL = authorityURL + "api/dispute";
-			//HttpClient client = HttpClientBuilder.create().build();
+			// HttpClient client = HttpClientBuilder.create().build();
 			HttpPost post = new HttpPost(disputeURL);
 			// TODO set headers
 			// post.setHeader(arg0, arg1);

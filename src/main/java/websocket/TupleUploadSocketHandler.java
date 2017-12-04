@@ -1,3 +1,8 @@
+/**
+ * This class helps with the web sockets. It is not used yet.
+ */
+
+
 package websocket;
 
 import java.util.ArrayList;

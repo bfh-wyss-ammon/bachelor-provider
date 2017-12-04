@@ -1,3 +1,8 @@
+/**
+ * This helper class has static methods that generate the signatures from the provider (used on L and on the payment receipt).
+ */
+
+
 package util;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;

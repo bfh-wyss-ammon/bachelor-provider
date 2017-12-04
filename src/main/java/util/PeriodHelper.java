@@ -1,3 +1,7 @@
+/**
+ * This class static helper methods in relation to the toll calculation periods. It performing the check if the payment of the period per group were equal to the costs. It also has some formatting and parsing methods for the period (date objects).
+ */
+
 package util;
 
 import java.text.DateFormat;
@@ -49,8 +53,7 @@ public class PeriodHelper {
 
 				if (sumOfCosts > payment.getTotal())
 					DisputeResolveHelper.createResolveRequest(periode, group);
-			}
-			else {
+			} else {
 				DisputeResolveHelper.createResolveRequest(periode, group);
 			}
 		}

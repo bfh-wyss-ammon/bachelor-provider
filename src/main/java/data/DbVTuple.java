@@ -1,3 +1,9 @@
+/**
+ * This class gets (only used for reading) the relevant position tuple information for the toll calculation protocol from the database of the provider.
+ * It is also used for computing the HashValue of list L in the dispute resolving protocol.
+ */
+
+
 package data;
 
 import java.util.Date;

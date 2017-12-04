@@ -1,3 +1,8 @@
+/**
+ * This class stores the settings of the provider in a plain text file on the file system.
+ */
+
+
 package data;
 
 public class ProviderSettings {

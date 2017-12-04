@@ -1,3 +1,9 @@
+/**
+ * This class stores data related to a payment in the toll calculation protocol in the database of the provider.
+ * It is also used to generate the HashValue of a payment and serializing/parsing the payment to JSON (between provider and mobile application).
+ */
+
+
 package data;
 
 import com.google.gson.annotations.Expose;

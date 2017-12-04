@@ -1,3 +1,7 @@
+/**
+ * This class stores data related to a signature group in the database of the provider.
+ */
+
 package data;
 
 

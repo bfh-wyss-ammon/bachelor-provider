@@ -1,3 +1,8 @@
+/**
+ * This class stores data related to a position tuple in the database of the provider.
+ */
+
+
 package data;
 
 import java.math.BigDecimal;

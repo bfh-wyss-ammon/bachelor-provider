@@ -1,3 +1,7 @@
+/**
+ * This class handles the case when position tuples from an unknown group are sent to the provider. In this case, the provider has to get the public key from the authority.
+ */
+
 package util;
 
 import java.io.BufferedReader;

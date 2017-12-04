@@ -1,3 +1,8 @@
+/**
+ * This Class is used for JSON serializing in the Web Application.
+ * It stores the accrued cost for a signature group for the concerned period.
+ */
+
 package data;
 
 import java.util.Date;
