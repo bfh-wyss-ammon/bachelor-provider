@@ -2,7 +2,7 @@
  * This is the main executable class of the provider. It specifies how all of the API-Paths work.
  */
 
-package route;
+package router;
 
 import static spark.Spark.*;
 
