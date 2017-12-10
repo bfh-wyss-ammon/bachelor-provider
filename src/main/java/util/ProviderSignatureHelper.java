@@ -1,3 +1,8 @@
+/**
+ * This helper class has static methods that generate the signatures from the provider (used on L and on the payment receipt).
+ */
+
+
 package util;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -5,6 +10,7 @@ import java.security.spec.X509EncodedKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
 
+import data.CommonSettings;
 import data.ProviderSettings;
 
 
@@ -21,8 +27,9 @@ public class ProviderSignatureHelper {
 			sig.update(message);
 			return sig.verify(signature);
 			
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			Logger.errorLogger(ex);
 			return false;
 		}
 	}
@@ -39,8 +46,9 @@ try {
 	        signature.update(message);
 	        sigBytes = signature.sign();
 			
-		}catch (Exception e) {
-			e.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			Logger.errorLogger(ex);
 			
 		}
 

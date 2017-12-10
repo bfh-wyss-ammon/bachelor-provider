@@ -1,3 +1,8 @@
+/**
+ * This class stores the signed receipt which is sent from the provider to the mobile app as a payment proof at the end of the toll calculation protocol.
+ */
+
+
 package data;
 import interfaces.HashValue;
 

@@ -1,3 +1,9 @@
+/**
+ * This class gets (only used for reading) the total sum of all payments for a signature group in the selected period from the database of the provider.
+ * It is also used for serializing to JSON for the web application.
+ */
+
+
 package data;
 
 import java.io.Serializable;

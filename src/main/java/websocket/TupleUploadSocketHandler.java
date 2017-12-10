@@ -1,3 +1,8 @@
+/**
+ * This class helps with the web sockets. It is not used yet.
+ */
+
+
 package websocket;
 
 import java.util.ArrayList;
@@ -8,6 +13,8 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+
+import util.Logger;
 
 
 @WebSocket
@@ -47,8 +54,9 @@ public class TupleUploadSocketHandler {
 		if (session.isOpen()) {
 			try {
 				session.getRemote().sendString(text);
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				Logger.errorLogger(ex);
 			}
 		}
 	}

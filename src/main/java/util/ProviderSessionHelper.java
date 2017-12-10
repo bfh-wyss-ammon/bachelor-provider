@@ -1,3 +1,7 @@
+/**
+ * This class generates new instances of a toll calculation session. it is also able to get a existing session from database, and performs toll calculation session cleanup.
+ */
+
 package util;
 
 import java.time.LocalDateTime;
@@ -6,6 +10,7 @@ import java.util.Date;
 import data.DbGroup;
 import data.DbSession;
 import data.ProviderSettings;
+import data.CommonSettings;
 import data.State;
 
 public class ProviderSessionHelper {

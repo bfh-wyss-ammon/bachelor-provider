@@ -1,3 +1,7 @@
+/**
+ * This class executes the dispute resolving protocol with the authority (implements provider part).
+ */
+
 package util;
 
 import java.io.BufferedReader;
@@ -32,6 +36,7 @@ import data.Discrepancy;
 import data.DisputeState;
 import data.PaymentTuple;
 import data.ProviderSettings;
+import data.CommonSettings;
 import data.ResolveRequest;
 import data.ResolveResult;
 import data.ResolveTuple;
@@ -41,27 +46,26 @@ import signatures.Signature;
 
 public class DisputeResolveHelper {
 
-	// request to authority
 	private static boolean sendResolveRequest(DbDisputeSession session, ResolveRequest r) {
+		CommonSettings settings = SettingsHelper.getSettings(CommonSettings.class);
+		if (settings.isTls()) {
+			return sendResolveRequestHTTPS(session, r);
+		} else {
+			return sendResolveRequestHTTP(session, r);
+		}
+	}
+
+	private static boolean sendResolveRequestHTTPS(DbDisputeSession session, ResolveRequest r) {
 		Gson gson;
 		GsonBuilder builder = new GsonBuilder();
 		builder.registerTypeAdapter(BigInteger.class, new BigIntegerTypeAdapter());
 		gson = builder.excludeFieldsWithoutExposeAnnotation().create();
 
 		try {
-			
-			//timout handling
-			int timeout = 20;
-			RequestConfig config = RequestConfig.custom()
-			  .setConnectTimeout(timeout * 1000)
-			  .setConnectionRequestTimeout(timeout * 1000)
-			  .setSocketTimeout(timeout * 1000).build();
-			CloseableHttpClient client = 
-			  HttpClientBuilder.create().setDefaultRequestConfig(config).build();
-			
-			String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL();
+			CloseableHttpClient client = (CloseableHttpClient) HttpClientFactory.getHttpsClient();
+
+			String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityTLSURL();
 			String disputeURL = authorityURL + "api/dispute";
-			//HttpClient client = HttpClientBuilder.create().build();
 			HttpPost post = new HttpPost(disputeURL);
 			// TODO set headers
 			// post.setHeader(arg0, arg1);
@@ -126,11 +130,106 @@ public class DisputeResolveHelper {
 				return false;
 			}
 
-		} catch (Exception e) {
+		} catch (Exception ex) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			ex.printStackTrace();
 			session.setState(DisputeState.SENDERROR);
 			DatabaseHelper.Update(session);
+			Logger.errorLogger(ex);
+			return false;
+		}
+
+	}
+
+	// request to authority
+	private static boolean sendResolveRequestHTTP(DbDisputeSession session, ResolveRequest r) {
+		Gson gson;
+		GsonBuilder builder = new GsonBuilder();
+		builder.registerTypeAdapter(BigInteger.class, new BigIntegerTypeAdapter());
+		gson = builder.excludeFieldsWithoutExposeAnnotation().create();
+
+		try {
+
+			// timout handling
+			int timeout = 20;
+			RequestConfig config = RequestConfig.custom().setConnectTimeout(timeout * 1000)
+					.setConnectionRequestTimeout(timeout * 1000).setSocketTimeout(timeout * 1000).build();
+			CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
+
+			String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL();
+			String disputeURL = authorityURL + "api/dispute";
+			// HttpClient client = HttpClientBuilder.create().build();
+			HttpPost post = new HttpPost(disputeURL);
+			// TODO set headers
+			// post.setHeader(arg0, arg1);
+			String contentToSend = gson.toJson(r);
+			HttpEntity entity = new ByteArrayEntity(contentToSend.getBytes("UTF-8"));
+			post.setEntity(entity);
+
+			HttpResponse response = client.execute(post);
+			InputStream inputStream = response.getEntity().getContent();
+			InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+			BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+			StringBuilder stringBuilder = new StringBuilder();
+			String bufferedStrChunk = null;
+			while ((bufferedStrChunk = bufferedReader.readLine()) != null) {
+				stringBuilder.append(bufferedStrChunk);
+			}
+
+			int responseCode = response.getStatusLine().getStatusCode();
+			if (responseCode == 200) {
+				session.setState(DisputeState.SENTTOAUTHORITY);
+				DatabaseHelper.Update(session);
+				String strResponse = stringBuilder.toString();
+
+				System.out.println(strResponse);
+
+				if (strResponse != "") {
+					ResolveResult res = gson.fromJson(strResponse, ResolveResult.class);
+
+					byte[] sigBytes = Base64.getDecoder().decode(res.getAuthoritySignature());
+					byte[] message = HashHelper.getHash(res);
+
+					// check the authority signature on res
+					if (!ProviderSignatureHelper.verifyAuthorityMessage(message, sigBytes)) {
+						session.setState(DisputeState.RESULTERROR);
+						DatabaseHelper.Update(session);
+						return false;
+					}
+
+					List<Discrepancy> discrepancies = res.getRes();
+
+					for (int i = 0; i < discrepancies.size(); i++) {
+						Discrepancy d = discrepancies.get(i);
+						d.setDisputeSessionId(session.getSessionId());
+						int id = DatabaseHelper.Save(Discrepancy.class, d);
+						d.setResultId(id);
+					}
+
+					session.setDisputeResults(discrepancies);
+					session.setState(DisputeState.RESULTRECEIVED);
+					DatabaseHelper.Update(session);
+
+				} else {
+					session.setState(DisputeState.RESULTERROR);
+					DatabaseHelper.Update(session);
+					return false;
+				}
+
+				return true;
+			} else {
+				session.setState(DisputeState.SENDERROR);
+				DatabaseHelper.Update(session);
+				return false;
+			}
+
+		} catch (Exception ex) {
+			// TODO Auto-generated catch block
+			ex.printStackTrace();
+			session.setState(DisputeState.SENDERROR);
+			DatabaseHelper.Update(session);
+			Logger.errorLogger(ex);
+
 			return false;
 		}
 

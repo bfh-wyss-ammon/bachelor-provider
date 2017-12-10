@@ -28,8 +28,8 @@ public class SignatureTest {
 	    PrivateKey privateKey = keyPair.getPrivate();
 	    PublicKey publicKey = keyPair.getPublic();
 	    
-	    System.out.println(Base64.encodeBase64String(privateKey.getEncoded()));
-	    System.out.println(Base64.encodeBase64String(publicKey.getEncoded()));
+	    System.out.println("Private Key: " + Base64.encodeBase64String(privateKey.getEncoded()));
+	    System.out.println("Public Key: " + Base64.encodeBase64String(publicKey.getEncoded()));
 
 		
 	}

@@ -1,3 +1,7 @@
+/**
+ * This class stores a public key in the database of the provider. It is also used for serializing/parsing public keys from and to JSON.
+ */
+
 package data;
 
 import java.io.Serializable;

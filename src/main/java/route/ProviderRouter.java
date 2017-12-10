@@ -1,3 +1,7 @@
+/**
+ * This is the main executable class of the provider. It specifies how all of the API-Paths work.
+ */
+
 package route;
 
 import static spark.Spark.*;
@@ -19,7 +23,6 @@ import data.DbVPayment;
 import data.DbVTuple;
 import data.Discrepancy;
 import data.InvoiceItems;
-import data.ProviderSettings;
 import data.DisputeSessionView;
 import data.DbDisputeSession;
 import data.Receipt;
@@ -27,12 +30,13 @@ import data.Costs;
 import data.State;
 import data.Tuple;
 import data.Payment;
+import data.ProviderSettings;
 import rest.BaseRouter;
 import util.Consts;
 import util.DatabaseHelper;
-import util.DisputeResolveHelper;
 import util.GroupHelper;
 import util.HashHelper;
+import util.Logger;
 import util.PeriodHelper;
 import util.ProviderSessionHelper;
 import util.ProviderSignatureHelper;
@@ -67,9 +71,8 @@ public class ProviderRouter extends BaseRouter {
 					response.status(Consts.HttpBadRequest);
 					return "";
 				}
-				String authorityURL = SettingsHelper.getSettings(ProviderSettings.class).getAuthorityURL();
 				if (!DatabaseHelper.Exists(DbGroup.class, " groupId= " + tuple.getGroupId())) {
-					if (!GroupHelper.getGroupsFromAuthority(authorityURL, tuple.getGroupId())) {
+					if (!GroupHelper.getGroupsFromAuthority(tuple.getGroupId())) {
 						response.status(Consts.HttpBadRequest);
 						return "";
 					}
@@ -96,6 +99,7 @@ public class ProviderRouter extends BaseRouter {
 			} catch (Exception ex) {
 				System.out.println("[post] /tuple error:" + ex.getMessage());
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
 			}
 			return "";
 		});
@@ -106,8 +110,7 @@ public class ProviderRouter extends BaseRouter {
 			int gracePeriods = settings.getGracePeriods();
 			int periodLength = settings.getPeriodLengthDays();
 			String[] periods = new String[gracePeriods + 1];
-			DateTimeFormatter formatters = DateTimeFormatter
-					.ofPattern(SettingsHelper.getSettings(ProviderSettings.class).getPeriodFormat());
+			DateTimeFormatter formatters = DateTimeFormatter.ofPattern(settings.getPeriodFormat());
 			LocalDate date = LocalDate.now().minusDays(gracePeriods * periodLength);
 
 			for (int i = 0; i <= gracePeriods; i++) {
@@ -127,8 +130,9 @@ public class ProviderRouter extends BaseRouter {
 				groupId = Integer.parseInt(request.params(":groupId"));
 				strPeriod = request.params(":periodId");
 				period = PeriodHelper.parse(strPeriod);
-			} catch (Exception e) {
+			} catch (Exception ex) {
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
 				return "";
 			}
 
@@ -189,8 +193,9 @@ public class ProviderRouter extends BaseRouter {
 			try {
 				sessionId = request.params(":sessionId");
 				payment = gson.fromJson(request.body(), Payment.class);
-			} catch (Exception e) {
+			} catch (Exception ex) {
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
 				return "";
 			}
 			DbSession session = null;
@@ -253,9 +258,10 @@ public class ProviderRouter extends BaseRouter {
 				String periodeId = request.params(":periodeId");
 				period = PeriodHelper.parse(periodeId);
 
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Exception ex) {
+				ex.printStackTrace();
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
 				return "";
 			}
 
@@ -283,9 +289,11 @@ public class ProviderRouter extends BaseRouter {
 				String periodeId = request.params(":periodeId");
 				period = PeriodHelper.parse(periodeId);
 
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Exception ex) {
+				ex.printStackTrace();
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
+
 				return "";
 			}
 
@@ -331,9 +339,10 @@ public class ProviderRouter extends BaseRouter {
 				String periodeId = request.params(":periodeId");
 				period = PeriodHelper.parse(periodeId);
 
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Exception ex) {
+				ex.printStackTrace();
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
 				return "";
 			}
 
@@ -354,9 +363,10 @@ public class ProviderRouter extends BaseRouter {
 				String periodeId = request.params(":periodeId");
 				period = PeriodHelper.parse(periodeId);
 
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Exception ex) {
+				ex.printStackTrace();
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
 				return "";
 			}
 

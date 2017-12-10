@@ -1,60 +1,94 @@
+/**
+ * This class handles the case when position tuples from an unknown group are sent to the provider. In this case, the provider has to get the public key from the authority.
+ */
+
 package util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import javax.net.ssl.HttpsURLConnection;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
+import data.ProviderSettings;
+import data.CommonSettings;
 import data.DbGroup;
 
 public class GroupHelper {
 
-	public static boolean getGroupsFromAuthority(String authorityUrl, int groupId) {
+	public static boolean getGroupsFromAuthority(int groupId) {
 
 		StringBuffer content = new StringBuffer();
 		try {
-			URL url = new URL(authorityUrl +"/api/groups/" + groupId);
-			HttpURLConnection con = (HttpURLConnection) url.openConnection();
-			con.setRequestMethod("GET");
-			con.setConnectTimeout(5000);
-			con.setReadTimeout(5000);
+			CommonSettings cSettings = SettingsHelper.getSettings(CommonSettings.class);
+			ProviderSettings aSettings = SettingsHelper.getSettings(ProviderSettings.class);
 
-			// drop the req
-			int status = con.getResponseCode();
+			if (!cSettings.isTls()) {
+				// TLS mode is disabled
+				URL url = new URL(aSettings.getAuthorityURL() + "/api/groups/" + groupId);
+				HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
-			if (status != Consts.HttpStatuscodeOk)
-			{
-				return false;
+				con.setRequestMethod("GET");
+				con.setConnectTimeout(5000);
+				con.setReadTimeout(5000);
+
+				// drop the req
+				int status = con.getResponseCode();
+
+				if (status != Consts.HttpStatuscodeOk) {
+					return false;
+				}
+
+				BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+				String inputLine;
+
+				while ((inputLine = in.readLine()) != null) {
+					content.append(inputLine);
+				}
+				in.close();
+
+				con.disconnect();
+			} else {
+				// TLS mode is enables
+				URL url = new URL(aSettings.getAuthorityTLSURL() + "/api/groups/" + groupId);
+				HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+				con.setRequestMethod("GET");
+				con.setConnectTimeout(5000);
+				con.setReadTimeout(5000);
+
+				// drop the req
+				int status = con.getResponseCode();
+
+				if (status != Consts.HttpStatuscodeOk) {
+					return false;
+				}
+
+				BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+				String inputLine;
+
+				while ((inputLine = in.readLine()) != null) {
+					content.append(inputLine);
+				}
+				in.close();
+
+				con.disconnect();
 			}
-			
-			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-			String inputLine;
 
-			while ((inputLine = in.readLine()) != null) {
-				content.append(inputLine);
-			}
-			in.close();
-
-			con.disconnect();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+			Logger.errorLogger(ex);
 			return false;
 		}
 
 		String result = content.toString();
-
 		// save to db
 		DbGroup group = new Gson().fromJson(result, DbGroup.class);
-		
-		if(group == null) return false;
 
-			DatabaseHelper.SaveOrUpdate(group);
+		if (group == null)
+			return false;
+
+		DatabaseHelper.SaveOrUpdate(group);
 
 		return true;
 	}
