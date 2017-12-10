@@ -68,7 +68,7 @@
 					<skipTests>true</skipTests>
 					<archive>
 						<manifest>
-							<mainClass>route.ProviderRouter</mainClass>
+							<mainClass>router.ProviderRouter</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
