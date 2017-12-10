@@ -36,6 +36,7 @@ import util.Consts;
 import util.DatabaseHelper;
 import util.GroupHelper;
 import util.HashHelper;
+import util.Logger;
 import util.PeriodHelper;
 import util.ProviderSessionHelper;
 import util.ProviderSignatureHelper;
@@ -93,6 +94,7 @@ public class ProviderRouter extends BaseRouter {
 			} catch (Exception ex) {
 				System.out.println("[post] /tuple error:" + ex.getMessage());
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
 			}
 			return "";
 		});
@@ -123,8 +125,9 @@ public class ProviderRouter extends BaseRouter {
 				groupId = Integer.parseInt(request.params(":groupId"));
 				strPeriod = request.params(":periodId");
 				period = PeriodHelper.parse(strPeriod);
-			} catch (Exception e) {
+			} catch (Exception ex) {
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
 				return "";
 			}
 
@@ -185,8 +188,9 @@ public class ProviderRouter extends BaseRouter {
 			try {
 				sessionId = request.params(":sessionId");
 				payment = gson.fromJson(request.body(), Payment.class);
-			} catch (Exception e) {
+			} catch (Exception ex) {
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
 				return "";
 			}
 			DbSession session = null;
@@ -249,9 +253,10 @@ public class ProviderRouter extends BaseRouter {
 				String periodeId = request.params(":periodeId");
 				period = PeriodHelper.parse(periodeId);
 
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Exception ex) {
+				ex.printStackTrace();
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
 				return "";
 			}
 
@@ -279,9 +284,11 @@ public class ProviderRouter extends BaseRouter {
 				String periodeId = request.params(":periodeId");
 				period = PeriodHelper.parse(periodeId);
 
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Exception ex) {
+				ex.printStackTrace();
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
+
 				return "";
 			}
 
@@ -327,9 +334,10 @@ public class ProviderRouter extends BaseRouter {
 				String periodeId = request.params(":periodeId");
 				period = PeriodHelper.parse(periodeId);
 
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Exception ex) {
+				ex.printStackTrace();
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
 				return "";
 			}
 
@@ -350,9 +358,10 @@ public class ProviderRouter extends BaseRouter {
 				String periodeId = request.params(":periodeId");
 				period = PeriodHelper.parse(periodeId);
 
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Exception ex) {
+				ex.printStackTrace();
 				response.status(Consts.HttpBadRequest);
+				Logger.errorLogger(ex);
 				return "";
 			}
 

@@ -75,8 +75,9 @@ public class GroupHelper {
 				con.disconnect();
 			}
 
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+			Logger.errorLogger(ex);
 			return false;
 		}
 

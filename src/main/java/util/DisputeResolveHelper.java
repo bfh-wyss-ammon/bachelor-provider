@@ -130,11 +130,12 @@ public class DisputeResolveHelper {
 				return false;
 			}
 
-		} catch (Exception e) {
+		} catch (Exception ex) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			ex.printStackTrace();
 			session.setState(DisputeState.SENDERROR);
 			DatabaseHelper.Update(session);
+			Logger.errorLogger(ex);
 			return false;
 		}
 
@@ -222,11 +223,13 @@ public class DisputeResolveHelper {
 				return false;
 			}
 
-		} catch (Exception e) {
+		} catch (Exception ex) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			ex.printStackTrace();
 			session.setState(DisputeState.SENDERROR);
 			DatabaseHelper.Update(session);
+			Logger.errorLogger(ex);
+
 			return false;
 		}
 

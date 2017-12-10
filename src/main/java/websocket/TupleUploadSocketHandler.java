@@ -14,6 +14,8 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
+import util.Logger;
+
 
 @WebSocket
 public class TupleUploadSocketHandler {
@@ -52,8 +54,9 @@ public class TupleUploadSocketHandler {
 		if (session.isOpen()) {
 			try {
 				session.getRemote().sendString(text);
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				Logger.errorLogger(ex);
 			}
 		}
 	}

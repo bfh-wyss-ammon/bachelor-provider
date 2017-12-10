@@ -34,6 +34,7 @@ public class LiveSocket {
 				session.getRemote().sendString(message);
 			} catch (Exception ex) {
 				ex.printStackTrace();
+				Logger.errorLogger(ex);
 			}
 		}
 	}
