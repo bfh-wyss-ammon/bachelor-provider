@@ -5,13 +5,13 @@
 			<generator class="identity" />
 		</id>
 		<property name="userId">
-			<column name="userId" />
+			<column name="userid" />
 		</property>
 		<property name="deltaToll">
-			<column name="deltaToll" />
+			<column name="deltatoll" />
 		</property>
 		<property name="disputeSessionId">
-			<column name="disputesessionId" />
+			<column name="disputesessionid" />
 		</property>
 	</class>
 </hibernate-mapping>
