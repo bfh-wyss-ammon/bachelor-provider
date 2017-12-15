@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-configuration>
+    <session-factory>
+        <property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/provider</property>
+        <property name="hibernate.connection.username">root</property>
+        <property name="hibernate.connection.password">123456</property>
+        <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+        <property name="hibernate.show_sql">true</property>
+        <mapping resource="group.hbm.xml" />
+        <mapping resource="publicKey.hbm.xml" />
+        <mapping resource="tuple.hbm.xml" />
+        <mapping resource="vtuple.hbm.xml" />
+        <mapping resource="signature.hbm.xml" />
+        <mapping resource="session.hbm.xml" />
+        <mapping resource="vpayment.hbm.xml" />
+        <mapping resource="disputesession.hbm.xml" />
+        <mapping resource="disputeresult.hbm.xml" />
+    </session-factory>
+</hibernate-configuration>

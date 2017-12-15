@@ -2,7 +2,7 @@
 <hibernate-mapping>
 	<class name="data.DbVPayment" table="payments">
 		<composite-id>
-			<key-property name="groupId" type="int" column="groupId" />
+			<key-property name="groupId" type="int" column="groupid" />
 			<key-property name="period" column="period" />
 		</composite-id>
 		<property name="total">

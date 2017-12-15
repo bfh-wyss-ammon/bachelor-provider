@@ -4,7 +4,7 @@
 		<id name="sessionId" type="int" column="sessionId">
 			<generator class="identity" />
 		</id>
-		<many-to-one name="group" class="data.DbGroup" column="groupId"
+		<many-to-one name="group" class="data.DbGroup" column="groupid"
 			unique="true" not-null="true" lazy="false" fetch="select" />
 		<property name="state" column="state">
 			<type name="org.hibernate.type.EnumType">
@@ -22,7 +22,7 @@
 			<column name="period" />
 		</property>
 		<property name="SignatureOnResult">
-			<column name="SignatureOnResult" />
+			<column name="signatureonresult" />
 		</property>
 	</class>
 </hibernate-mapping>

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <hibernate-mapping>
 	<class name="data.DbTuple" table="tuple">
-		<id name="tupleId" type="int" column="tupleId">
+		<id name="tupleId" type="int" column="tupleid">
 			<generator class="identity" />
 		</id>
 		<many-to-one name="group" class="data.DbGroup" lazy="false"
-			fetch="select" column="groupId" unique="true" not-null="true"
+			fetch="select" column="groupid" unique="true" not-null="true"
 			cascade="all" />
 		<many-to-one name="signature" class="data.DbSignature" lazy="false"
-			fetch="select" column="signatureId" unique="true" not-null="true"
+			fetch="select" column="signatureid" unique="true" not-null="true"
 			cascade="all" />
 		<property name="longitude" type="big_decimal">
 			<column name="longitude" />

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <hibernate-mapping>
 	<class name="data.DbVTuple" table="vtuples">
-		<id name="tupleId" type="int" column="tupleId">
+		<id name="tupleId" type="int" column="tupleid">
 		</id>
 		<property name="hash">
 			<column name="hash" />

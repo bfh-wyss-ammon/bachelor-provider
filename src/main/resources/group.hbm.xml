@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <hibernate-mapping>
-	<class name="data.DbGroup" table="CryptoGroup">
+	<class name="data.DbGroup" table="cryptogroup">
 	
-		<id name="ProviderGroupId" type="int" column="providerGroupId">
+		<id name="ProviderGroupId" type="int" column="providergroupid">
 			<generator class="identity" />
 		</id>
 		<property name="groupId" type="int">
-			<column name="groupId" />
+			<column name="groupid" />
 		</property>
 		<many-to-one name="publicKey" class="data.DbPublicKey" lazy="false" fetch="select"
-			column="publicKeyId" unique="true" not-null="true" cascade="all" />
+			column="publickeyid" unique="true" not-null="true" cascade="all" />
 	</class>
 </hibernate-mapping>

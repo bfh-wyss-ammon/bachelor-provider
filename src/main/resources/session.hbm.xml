@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <hibernate-mapping>
 	<class name="data.DbSession" table="session">
-		<id name="sessionId" type="int" column="sessionId">
+		<id name="sessionId" type="int" column="sessionid">
 			<generator class="identity" />
 		</id>
-		<many-to-one name="group" class="data.DbGroup" column="groupId"
+		<many-to-one name="group" class="data.DbGroup" column="groupid"
 			unique="true" not-null="true" lazy="false" fetch="select" />
 		<many-to-one name="paymentSignature" class="data.DbSignature"
-			column="signatureId" unique="true" not-null="false" lazy="false" fetch="select" cascade="all" />
+			column="signatureid" unique="true" not-null="false" lazy="false" fetch="select" cascade="all" />
 		<property name="period">
 			<column name="period" />
 		</property>
 		<property name="SignatureOnTuples">
-			<column name="SignatureOnTuples" />
+			<column name="signatureontuples" />
 		</property>
 		<property name="paidAmount">
-			<column name="paidAmount" />
+			<column name="paidamount" />
 		</property>
 		<property name="state" column="state">
 			<type name="org.hibernate.type.EnumType">
@@ -33,7 +33,7 @@
 			<column name="created" />
 		</property>
 		<property name="invoiceItemsCreated">
-			<column name="invoiceItemsCreated" />
+			<column name="invoiceitemscreated" />
 		</property>
 	</class>
 </hibernate-mapping>
