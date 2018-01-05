@@ -294,7 +294,7 @@ public class DisputeResolveHelper {
 
 		// getting T
 		List<PaymentTuple> t = new ArrayList<PaymentTuple>();
-		List<DbSession> sessions = DatabaseHelper.Get(DbSession.class, "groupId= '" + groupId + "'", "created", after,
+		List<DbSession> sessions = DatabaseHelper.Get(DbSession.class, "groupId= '" + "' AND state= 'PAID'", "created", after,
 				before);
 
 		for (DbSession sess : sessions) {
